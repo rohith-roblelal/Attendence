@@ -74,6 +74,17 @@ const fetchYears = async () => {
     }
   };
 
+  const deleteYear = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this academic year?")) return;
+    setError(null);
+    try {
+      await academicApi.deleteAcademicYear(id);
+      fetchYears();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete academic year');
+    }
+  };
+
   const editYear = (year: any) => {
     setIsEditing(true);
     setCurrentId(year.id);
@@ -163,8 +174,9 @@ const fetchYears = async () => {
                       {year.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button onClick={() => editYear(year)} className="text-blue-600 hover:text-blue-900">Edit</button>
+                    <button onClick={() => deleteYear(year.id)} className="text-red-600 hover:text-red-900">Delete</button>
                   </td>
                 </tr>
               ))
