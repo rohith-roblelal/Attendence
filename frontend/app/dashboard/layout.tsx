@@ -4,6 +4,7 @@ import { useAuth } from '../../lib/auth/AuthContext';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Home, Users, BookOpen, Calendar, Clock, BarChart3, Settings } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { useEffect } from 'react';
 
 interface NavItem {
@@ -89,13 +90,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="text-xs text-gray-500">{user.role}</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => logout()}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors"
+            className="w-full flex items-center justify-start gap-3 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
           >
             <LogOut className="w-5 h-5" />
             Logout
-          </button>
+          </Button>
         </div>
       </aside>
 
@@ -104,9 +106,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Mobile Header (simplified for now) */}
         <header className="md:hidden h-16 bg-white shadow-sm flex items-center justify-between px-4">
           <h1 className="text-lg font-bold text-gray-800">CAS</h1>
-          <button onClick={() => logout()} className="text-gray-600">
-            <LogOut className="w-6 h-6" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={() => logout()} className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+            <LogOut className="w-5 h-5" />
+          </Button>
         </header>
 
         {/* Page Content */}

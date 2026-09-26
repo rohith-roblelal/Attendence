@@ -6,6 +6,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { academicApi } from '../../lib/api/academic';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const academicYearSchema = z.object({
   name: z.string().min(1, 'Name is required').max(20),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Must be YYYY-MM-DD'),
@@ -31,11 +39,7 @@ export default function AcademicYears() {
     defaultValues: { is_active: true }
   });
 
-  useEffect(() => {
-    fetchYears();
-  }, []);
-
-  const fetchYears = async () => {
+const fetchYears = async () => {
     setLoading(true);
     try {
       const res = await academicApi.getAcademicYears();
@@ -48,6 +52,11 @@ export default function AcademicYears() {
     }
   };
 
+  useEffect(() => {
+    fetchYears();
+  }, []);
+
+  
   const onSubmit = async (data: AcademicYearFormData) => {
     setError(null);
     try {

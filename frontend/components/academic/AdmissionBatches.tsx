@@ -6,6 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { academicApi } from '../../lib/api/academic';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const admissionBatchSchema = z.object({
   academic_year_id: z.number().int().positive('Academic Year is required'),
   department_id: z.number().int().positive('Department is required'),
@@ -34,11 +40,7 @@ export default function AdmissionBatches() {
 
   const selectedDeptId = watch('department_id');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [batchRes, yearRes, deptRes, specRes] = await Promise.all([
@@ -59,6 +61,11 @@ export default function AdmissionBatches() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: AdmissionBatchFormData) => {
     setError(null);
     try {
@@ -101,105 +108,110 @@ export default function AdmissionBatches() {
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit' : 'Create'} Admission Batch</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Academic Year</label>
-            <select {...register('academic_year_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>Select...</option>
-              {years.map(y => (
-                <option key={y.id} value={y.id}>{y.name}</option>
-              ))}
-            </select>
-            {errors.academic_year_id && <p className="text-red-500 text-xs mt-1">{errors.academic_year_id.message}</p>}
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit' : 'Create'} Admission Batch</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="academic_year_id">Academic Year</Label>
+                <select id="academic_year_id" {...register('academic_year_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>Select...</option>
+                  {years.map(y => (
+                    <option key={y.id} value={y.id}>{y.name}</option>
+                  ))}
+                </select>
+                {errors.academic_year_id && <p className="text-destructive text-xs mt-1">{errors.academic_year_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Department</label>
-            <select {...register('department_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>Select...</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-            {errors.department_id && <p className="text-red-500 text-xs mt-1">{errors.department_id.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="department_id">Department</Label>
+                <select id="department_id" {...register('department_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>Select...</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+                {errors.department_id && <p className="text-destructive text-xs mt-1">{errors.department_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Specialization (Optional)</label>
-            <select {...register('specialization_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>None</option>
-              {specializations.filter(s => s.department_id === selectedDeptId).map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-            {errors.specialization_id && <p className="text-red-500 text-xs mt-1">{errors.specialization_id.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="specialization_id">Specialization (Optional)</Label>
+                <select id="specialization_id" {...register('specialization_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>None</option>
+                  {specializations.filter(s => s.department_id === selectedDeptId).map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                {errors.specialization_id && <p className="text-destructive text-xs mt-1">{errors.specialization_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Batch Name</label>
-            <input {...register('batch_name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. 2026-2030 CS" />
-            {errors.batch_name && <p className="text-red-500 text-xs mt-1">{errors.batch_name.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="batch_name">Batch Name</Label>
+                <Input id="batch_name" {...register('batch_name')} placeholder="e.g. 2026-2030 CS" />
+                {errors.batch_name && <p className="text-destructive text-xs mt-1">{errors.batch_name.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Admission Year</label>
-            <input type="number" {...register('admission_year', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. 2026" />
-            {errors.admission_year && <p className="text-red-500 text-xs mt-1">{errors.admission_year.message}</p>}
-          </div>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="admission_year">Admission Year</Label>
+                <Input type="number" id="admission_year" {...register('admission_year', { valueAsNumber: true })} placeholder="e.g. 2026" />
+                {errors.admission_year && <p className="text-destructive text-xs mt-1">{errors.admission_year.message}</p>}
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Specialization</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Batch Name</TableHead>
+              <TableHead>Year</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead>Specialization</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : batches.length === 0 ? (
-              <tr><td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">No batches found.</td></tr>
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No batches found.</TableCell></TableRow>
             ) : (
               batches.map(batch => {
                 const dept = departments.find(d => d.id === batch.department_id);
                 const spec = specializations.find(s => s.id === batch.specialization_id);
                 return (
-                  <tr key={batch.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{batch.batch_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{batch.admission_year}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{dept?.code}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{spec ? spec.code : '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => editBatch(batch)} className="text-blue-600 hover:text-blue-900">Edit</button>
-                    </td>
-                  </tr>
+                  <TableRow key={batch.id}>
+                    <TableCell className="font-medium">{batch.batch_name}</TableCell>
+                    <TableCell>{batch.admission_year}</TableCell>
+                    <TableCell className="text-muted-foreground">{dept?.code}</TableCell>
+                    <TableCell className="text-muted-foreground">{spec ? spec.code : '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="link" onClick={() => editBatch(batch)}>Edit</Button>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

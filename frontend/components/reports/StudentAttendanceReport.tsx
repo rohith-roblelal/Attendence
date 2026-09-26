@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { reportsApi } from '../../lib/api/reports';
 import { studentsApi } from '../../lib/api/students';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 
 export default function StudentAttendanceReport() {
   const [students, setStudents] = useState<any[]>([]);
@@ -13,11 +17,7 @@ export default function StudentAttendanceReport() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const fetchStudents = async () => {
+const fetchStudents = async () => {
     try {
       const res = await studentsApi.getStudents();
       setStudents(res.data.data.filter((s: any) => s.is_active));
@@ -28,6 +28,11 @@ export default function StudentAttendanceReport() {
     }
   };
 
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  
   useEffect(() => {
     if (selectedStudentId) {
       fetchReport(selectedStudentId);
@@ -52,69 +57,76 @@ export default function StudentAttendanceReport() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-        <label className="block text-sm font-medium text-gray-700">Select Student</label>
-        <select 
-          value={selectedStudentId} 
-          onChange={(e) => setSelectedStudentId(Number(e.target.value))} 
-          className="mt-1 block w-full max-w-md rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-        >
-          <option value={0}>Choose a student...</option>
-          {students.map(s => (
-            <option key={s.id} value={s.id}>
-              {s.first_name} {s.last_name} ({s.admission_number || 'No ID'})
-            </option>
-          ))}
-        </select>
-        {loadingList && <p className="text-xs text-gray-500 mt-1">Loading students...</p>}
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <Label>Select Student</Label>
+            <select 
+              value={selectedStudentId} 
+              onChange={(e) => setSelectedStudentId(Number(e.target.value))} 
+              className="flex h-9 w-full max-w-md rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value={0}>Choose a student...</option>
+              {students.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.first_name} {s.last_name} ({s.admission_number || 'No ID'})
+                </option>
+              ))}
+            </select>
+            {loadingList && <p className="text-xs text-muted-foreground mt-1">Loading students...</p>}
+          </div>
+        </CardContent>
+      </Card>
 
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
 
       {selectedStudentId > 0 && (
-        <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Attendance by Subject</h3>
-          </div>
-          
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Sessions</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Present</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Absent</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loadingReport ? (
-                <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Generating report...</td></tr>
-              ) : reportData.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No attendance data found for this student.</td></tr>
-              ) : (
-                reportData.map((row, idx) => {
-                  const percentage = row.total_sessions > 0 ? (row.present_sessions / row.total_sessions) * 100 : 0;
-                  return (
-                    <tr key={idx}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.class_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.subject_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{row.total_sessions}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium text-center">{row.present_sessions}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium text-center">{row.absent_sessions}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <span className={`px-2 py-1 rounded ${percentage >= 75 ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50'}`}>
-                          {percentage.toFixed(1)}%
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Attendance by Subject</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-md overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead className="text-center">Total Sessions</TableHead>
+                    <TableHead className="text-center">Present</TableHead>
+                    <TableHead className="text-center">Absent</TableHead>
+                    <TableHead className="text-right">Percentage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingReport ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Generating report...</TableCell></TableRow>
+                  ) : reportData.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No attendance data found for this student.</TableCell></TableRow>
+                  ) : (
+                    reportData.map((row, idx) => {
+                      const percentage = row.total_sessions > 0 ? (row.present_sessions / row.total_sessions) * 100 : 0;
+                      return (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{row.class_name}</TableCell>
+                          <TableCell className="font-medium">{row.subject_name}</TableCell>
+                          <TableCell className="text-center text-muted-foreground">{row.total_sessions}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">{row.present_sessions}</TableCell>
+                          <TableCell className="text-center text-red-600 font-medium">{row.absent_sessions}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={percentage >= 75 ? 'default' : 'destructive'} className={percentage >= 75 ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}>
+                              {percentage.toFixed(1)}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

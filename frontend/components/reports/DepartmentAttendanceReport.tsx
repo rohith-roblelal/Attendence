@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { reportsApi } from '../../lib/api/reports';
 import { academicApi } from '../../lib/api/academic';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 
 export default function DepartmentAttendanceReport() {
   const [departments, setDepartments] = useState<any[]>([]);
@@ -13,11 +17,7 @@ export default function DepartmentAttendanceReport() {
   const [loadingReport, setLoadingReport] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const fetchDepartments = async () => {
+const fetchDepartments = async () => {
     try {
       const res = await academicApi.getDepartments();
       setDepartments(res.data.data.filter((d: any) => d.is_active));
@@ -28,6 +28,11 @@ export default function DepartmentAttendanceReport() {
     }
   };
 
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  
   useEffect(() => {
     if (selectedDepartmentId) {
       fetchReport(selectedDepartmentId);
@@ -52,67 +57,74 @@ export default function DepartmentAttendanceReport() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded shadow-sm border border-gray-100">
-        <label className="block text-sm font-medium text-gray-700">Select Department</label>
-        <select 
-          value={selectedDepartmentId} 
-          onChange={(e) => setSelectedDepartmentId(Number(e.target.value))} 
-          className="mt-1 block w-full max-w-md rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-        >
-          <option value={0}>Choose a department...</option>
-          {departments.map(d => (
-            <option key={d.id} value={d.id}>
-              {d.name}
-            </option>
-          ))}
-        </select>
-        {loadingList && <p className="text-xs text-gray-500 mt-1">Loading departments...</p>}
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-2">
+            <Label>Select Department</Label>
+            <select 
+              value={selectedDepartmentId} 
+              onChange={(e) => setSelectedDepartmentId(Number(e.target.value))} 
+              className="flex h-9 w-full max-w-md rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value={0}>Choose a department...</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            {loadingList && <p className="text-xs text-muted-foreground mt-1">Loading departments...</p>}
+          </div>
+        </CardContent>
+      </Card>
 
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
 
       {selectedDepartmentId > 0 && (
-        <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Department Class Aggregates</h3>
-          </div>
-          
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Name</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Active Students</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Records</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Present Records</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Attendance</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {loadingReport ? (
-                <tr><td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Generating report...</td></tr>
-              ) : reportData.length === 0 ? (
-                <tr><td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">No data found for this department.</td></tr>
-              ) : (
-                reportData.map((row, idx) => {
-                  const percentage = row.percentage ? parseFloat(row.percentage) : 0;
-                  return (
-                    <tr key={idx}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{row.class_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{row.student_count || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{row.total_records || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium text-center">{row.present_records || 0}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <span className={`px-2 py-1 rounded ${percentage >= 75 ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50'}`}>
-                          {percentage.toFixed(1)}%
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Department Class Aggregates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-md overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Class Name</TableHead>
+                    <TableHead className="text-center">Active Students</TableHead>
+                    <TableHead className="text-center">Total Records</TableHead>
+                    <TableHead className="text-center">Present Records</TableHead>
+                    <TableHead className="text-right">Overall Attendance</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingReport ? (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Generating report...</TableCell></TableRow>
+                  ) : reportData.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No data found for this department.</TableCell></TableRow>
+                  ) : (
+                    reportData.map((row, idx) => {
+                      const percentage = row.percentage ? parseFloat(row.percentage) : 0;
+                      return (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{row.class_name}</TableCell>
+                          <TableCell className="text-center text-muted-foreground">{row.student_count || 0}</TableCell>
+                          <TableCell className="text-center text-muted-foreground">{row.total_records || 0}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">{row.present_records || 0}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={percentage >= 75 ? 'default' : 'destructive'} className={percentage >= 75 ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}>
+                              {percentage.toFixed(1)}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

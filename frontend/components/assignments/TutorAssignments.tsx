@@ -36,11 +36,7 @@ export default function TutorAssignments() {
     resolver: zodResolver(isEditing ? updateTutorSchema : createTutorSchema),
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [assnRes, classRes, teachRes] = await Promise.all([
@@ -59,6 +55,11 @@ export default function TutorAssignments() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: any) => {
     setError(null);
     try {

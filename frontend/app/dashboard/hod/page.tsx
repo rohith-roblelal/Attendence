@@ -7,7 +7,7 @@ export default function HodDashboard() {
     <ProtectedRoute allowedRoles={['HOD']}>
       <div>
         <h1 className="text-2xl font-bold mb-4">HOD Dashboard</h1>
-        <p>Welcome to the HOD dashboard. Here you can monitor your department's attendance.</p>
+        <p>Welcome to the HOD dashboard. Here you can monitor your department&apos;s attendance.</p>
       </div>
     </ProtectedRoute>
   );

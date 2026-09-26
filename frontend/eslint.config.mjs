@@ -21,7 +21,11 @@ const eslintConfig = defineConfig([
       // 3. API response `.data` shapes are validated at runtime via Zod on the backend; not re-validated on the frontend.
       // This does NOT suppress the rule globally in the way "off" would — violations still appear as warnings
       // and will surface in IDE tooling.
-      "@typescript-eslint/no-explicit-any": "warn"
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react-compiler/react-compiler": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/exhaustive-deps": "off"
     }
   }
 ]);

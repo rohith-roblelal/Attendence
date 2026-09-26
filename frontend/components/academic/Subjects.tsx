@@ -7,6 +7,15 @@ import * as z from 'zod';
 import { subjectsApi } from '../../lib/api/subjects';
 import { Edit2, UserX } from 'lucide-react';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 const createSubjectSchema = z.object({
   code: z.string().min(1, 'Code is required').max(30),
   name: z.string().min(1, 'Name is required').max(150),
@@ -24,17 +33,14 @@ export default function Subjects() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
+  const [deactivateId, setDeactivateId] = useState<number | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<any>({
     resolver: zodResolver(createSubjectSchema),
     defaultValues: { is_active: true, subject_type: 'THEORY' }
   });
 
-  useEffect(() => {
-    fetchSubjects();
-  }, []);
-
-  const fetchSubjects = async () => {
+const fetchSubjects = async () => {
     setLoading(true);
     try {
       const res = await subjectsApi.getSubjects();
@@ -47,6 +53,11 @@ export default function Subjects() {
     }
   };
 
+  useEffect(() => {
+    fetchSubjects();
+  }, []);
+
+  
   const onSubmit = async (data: any) => {
     setError(null);
     try {
@@ -90,118 +101,126 @@ export default function Subjects() {
     setError(null);
   };
 
-  const handleDeactivate = async (id: number) => {
+  const handleDeactivate = async () => {
+    if (!deactivateId) return;
     setError(null);
     try {
-      await subjectsApi.deactivateSubject(id);
+      await subjectsApi.deactivateSubject(deactivateId);
+      setDeactivateId(null);
       fetchSubjects();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to deactivate subject');
+      setDeactivateId(null);
     }
   };
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit Subject' : 'Create Subject'}</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Subject Code</label>
-            <input {...register('code')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. CS101" />
-            {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code.message as string}</p>}
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit Subject' : 'Create Subject'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Subject Code</Label>
+                <Input {...register('code')} placeholder="e.g. CS101" />
+                {errors.code && <p className="text-destructive text-xs mt-1">{errors.code.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Subject Name</label>
-            <input {...register('name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. Introduction to Programming" />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message as string}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label>Subject Name</Label>
+                <Input {...register('name')} placeholder="e.g. Introduction to Programming" />
+                {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Type</label>
-            <select {...register('subject_type')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value="THEORY">Theory</option>
-              <option value="PRACTICAL">Practical</option>
-              <option value="PROJECT">Project</option>
-              <option value="SEMINAR">Seminar</option>
-            </select>
-            {errors.subject_type && <p className="text-red-500 text-xs mt-1">{errors.subject_type.message as string}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <select {...register('subject_type')} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="THEORY">Theory</option>
+                  <option value="PRACTICAL">Practical</option>
+                  <option value="PROJECT">Project</option>
+                  <option value="SEMINAR">Seminar</option>
+                </select>
+                {errors.subject_type && <p className="text-destructive text-xs mt-1">{errors.subject_type.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Credits</label>
-            <input type="number" step="0.5" {...register('credits', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-          </div>
+              <div className="space-y-2">
+                <Label>Credits</Label>
+                <Input type="number" step="0.5" {...register('credits', { valueAsNumber: true })} />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Contact Hours</label>
-            <input type="number" {...register('default_contact_hours', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-          </div>
+              <div className="space-y-2">
+                <Label>Contact Hours</Label>
+                <Input type="number" {...register('default_contact_hours', { valueAsNumber: true })} />
+              </div>
 
-          <div className="md:col-span-2 lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea {...register('description')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" rows={2} />
-          </div>
+              <div className="md:col-span-2 lg:col-span-3 space-y-2">
+                <Label>Description</Label>
+                <textarea {...register('description')} className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" rows={2} />
+              </div>
 
-          <div className="flex items-center">
-            <input type="checkbox" id="sub_is_active" {...register('is_active')} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-            <label htmlFor="sub_is_active" className="ml-2 block text-sm text-gray-900">Active</label>
-          </div>
-        </div>
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox id="sub_is_active" {...register('is_active')} />
+                <Label htmlFor="sub_is_active">Active</Label>
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update Subject' : 'Create Subject')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Subject' : 'Create Subject')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Credits / Hrs</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Code</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Credits / Hrs</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : subjects.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No subjects found.</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No subjects found.</TableCell></TableRow>
             ) : (
               subjects.map(sub => (
-                <tr key={sub.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sub.code}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{sub.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sub.subject_type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <TableRow key={sub.id}>
+                  <TableCell className="font-medium">{sub.code}</TableCell>
+                  <TableCell>{sub.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{sub.subject_type}</TableCell>
+                  <TableCell className="text-muted-foreground">
                     {sub.credits || '-'} / {sub.default_contact_hours || '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${sub.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={sub.is_active ? "default" : "destructive"}>
                       {sub.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
                     <div className="flex justify-end gap-3">
                       <button onClick={() => editSubject(sub)} className="text-blue-600 hover:text-blue-900">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       {sub.is_active ? (
-                        <button onClick={() => { if (confirm('Are you sure you want to deactivate this subject?')) handleDeactivate(sub.id); }} className="text-red-600 hover:text-red-900">
+                        <button onClick={() => setDeactivateId(sub.id)} className="text-red-600 hover:text-red-900">
                           <UserX className="w-4 h-4" />
                         </button>
                       ) : (
@@ -210,13 +229,28 @@ export default function Subjects() {
                         </button>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
+
+      <AlertDialog open={!!deactivateId} onOpenChange={(open) => !open && setDeactivateId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Subject</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to deactivate this subject?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeactivate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Deactivate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

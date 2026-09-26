@@ -6,6 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { academicApi } from '../../lib/api/academic';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const semesterSchema = z.object({
   academic_year_id: z.number().int().positive('Academic Year is required'),
   semester_number: z.number().int().positive('Semester Number is required'),
@@ -32,11 +38,7 @@ export default function Semesters() {
     resolver: zodResolver(semesterSchema),
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [semRes, yearRes] = await Promise.all([
@@ -53,6 +55,11 @@ export default function Semesters() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: SemesterFormData) => {
     setError(null);
     try {
@@ -91,98 +98,103 @@ export default function Semesters() {
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit' : 'Create'} Semester</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Academic Year</label>
-            <select {...register('academic_year_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>Select...</option>
-              {years.map(y => (
-                <option key={y.id} value={y.id}>{y.name}</option>
-              ))}
-            </select>
-            {errors.academic_year_id && <p className="text-red-500 text-xs mt-1">{errors.academic_year_id.message}</p>}
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit' : 'Create'} Semester</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="academic_year_id">Academic Year</Label>
+                <select id="academic_year_id" {...register('academic_year_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>Select...</option>
+                  {years.map(y => (
+                    <option key={y.id} value={y.id}>{y.name}</option>
+                  ))}
+                </select>
+                {errors.academic_year_id && <p className="text-destructive text-xs mt-1">{errors.academic_year_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Semester Number</label>
-            <input type="number" {...register('semester_number', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. 1" />
-            {errors.semester_number && <p className="text-red-500 text-xs mt-1">{errors.semester_number.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="semester_number">Semester Number</Label>
+                <Input type="number" id="semester_number" {...register('semester_number', { valueAsNumber: true })} placeholder="e.g. 1" />
+                {errors.semester_number && <p className="text-destructive text-xs mt-1">{errors.semester_number.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input {...register('name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. Fall 2026" />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" {...register('name')} placeholder="e.g. Fall 2026" />
+                {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
+              </div>
 
-          <div className="md:col-span-2 grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Date</label>
-              <input type="date" {...register('start_date')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-              {errors.start_date && <p className="text-red-500 text-xs mt-1">{errors.start_date.message}</p>}
+              <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input type="date" id="start_date" {...register('start_date')} />
+                  {errors.start_date && <p className="text-destructive text-xs mt-1">{errors.start_date.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input type="date" id="end_date" {...register('end_date')} />
+                  {errors.end_date && <p className="text-destructive text-xs mt-1">{errors.end_date.message}</p>}
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Date</label>
-              <input type="date" {...register('end_date')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-              {errors.end_date && <p className="text-red-500 text-xs mt-1">{errors.end_date.message}</p>}
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
             </div>
-          </div>
-        </div>
+          </form>
+        </CardContent>
+      </Card>
 
-        <div className="flex gap-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Number</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Academic Year</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Number</TableHead>
+              <TableHead>Academic Year</TableHead>
+              <TableHead>Start</TableHead>
+              <TableHead>End</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : semesters.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No semesters found.</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No semesters found.</TableCell></TableRow>
             ) : (
               semesters.map(sem => {
                 const year = years.find(y => y.id === sem.academic_year_id);
                 return (
-                  <tr key={sem.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{sem.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sem.semester_number}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{year?.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sem.start_date?.split('T')[0]}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sem.end_date?.split('T')[0]}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => editSem(sem)} className="text-blue-600 hover:text-blue-900">Edit</button>
-                    </td>
-                  </tr>
+                  <TableRow key={sem.id}>
+                    <TableCell className="font-medium">{sem.name}</TableCell>
+                    <TableCell>{sem.semester_number}</TableCell>
+                    <TableCell>{year?.name}</TableCell>
+                    <TableCell>{sem.start_date?.split('T')[0]}</TableCell>
+                    <TableCell>{sem.end_date?.split('T')[0]}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="link" onClick={() => editSem(sem)}>Edit</Button>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

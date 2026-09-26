@@ -39,11 +39,7 @@ export default function ClassSubjects() {
     resolver: zodResolver(isEditing ? updateClassSubjectSchema : createClassSubjectSchema),
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [assnRes, classRes, subRes, teachRes] = await Promise.all([
@@ -64,6 +60,11 @@ export default function ClassSubjects() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: any) => {
     setError(null);
     try {

@@ -7,7 +7,7 @@ export default function TutorDashboard() {
     <ProtectedRoute allowedRoles={['TUTOR']}>
       <div>
         <h1 className="text-2xl font-bold mb-4">Tutor Dashboard</h1>
-        <p>Welcome to the Tutor dashboard. Here you can monitor your assigned class's performance.</p>
+        <p>Welcome to the Tutor dashboard. Here you can monitor your assigned class&apos;s performance.</p>
       </div>
     </ProtectedRoute>
   );

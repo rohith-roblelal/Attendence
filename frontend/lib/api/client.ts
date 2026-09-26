@@ -16,7 +16,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Handle unauthorized (e.g., redirect to login)
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/login';
       }

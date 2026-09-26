@@ -11,6 +11,15 @@ import { subjectsApi } from '../../lib/api/subjects';
 import { teachersApi } from '../../lib/api/teachers';
 import { Edit2, Trash2 } from 'lucide-react';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 const createDailySchema = z.object({
   class_id: z.number().int().positive('Class is required'),
   change_date: z.string().min(1, 'Date is required'),
@@ -168,143 +177,149 @@ export default function DailyTimetableChanges() {
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
       
-      <div className="bg-blue-50 p-4 rounded text-sm text-blue-800 flex flex-col gap-1 border border-blue-100">
-        <span className="font-semibold">Important:</span>
-        <span>Daily timetable changes are strictly isolated to a specific date and do <strong>not</strong> affect the regular recurring timetable. Use this for ad-hoc substitutions, period swaps, or cancellations.</span>
-      </div>
+      <Alert className="bg-blue-50 text-blue-800 border-blue-200">
+        <AlertDescription>
+          <span className="font-semibold">Important:</span> Daily timetable changes are strictly isolated to a specific date and do <strong>not</strong> affect the regular recurring timetable. Use this for ad-hoc substitutions, period swaps, or cancellations.
+        </AlertDescription>
+      </Alert>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit Daily Change' : 'Log Daily Timetable Change'}</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Class</label>
-            <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 disabled:bg-gray-100">
-              <option value={0}>Select...</option>
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>{c.class_code || c.section_name}</option>
-              ))}
-            </select>
-            {errors.class_id && <p className="text-red-500 text-xs mt-1">{errors.class_id.message as string}</p>}
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit Daily Change' : 'Log Daily Timetable Change'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label>Class</Label>
+                <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                  <option value={0}>Select...</option>
+                  {classes.map(c => (
+                    <option key={c.id} value={c.id}>{c.class_code || c.section_name}</option>
+                  ))}
+                </select>
+                {errors.class_id && <p className="text-destructive text-xs mt-1">{errors.class_id.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Date of Change</label>
-            <input disabled={isEditing} type="date" {...register('change_date')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 disabled:bg-gray-100" />
-            {errors.change_date && <p className="text-red-500 text-xs mt-1">{errors.change_date.message as string}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label>Date of Change</Label>
+                <Input disabled={isEditing} type="date" {...register('change_date')} className="disabled:bg-gray-100" />
+                {errors.change_date && <p className="text-destructive text-xs mt-1">{errors.change_date.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Change Type</label>
-            <select {...register('change_type')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value="SUBSTITUTION">Substitution</option>
-              <option value="CANCELLATION">Cancellation</option>
-              <option value="RESCHEDULING">Rescheduling</option>
-            </select>
-            {errors.change_type && <p className="text-red-500 text-xs mt-1">{errors.change_type.message as string}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label>Change Type</Label>
+                <select {...register('change_type')} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="SUBSTITUTION">Substitution</option>
+                  <option value="CANCELLATION">Cancellation</option>
+                  <option value="RESCHEDULING">Rescheduling</option>
+                </select>
+                {errors.change_type && <p className="text-destructive text-xs mt-1">{errors.change_type.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Original Period Number</label>
-            <input disabled={isEditing} type="number" min="1" {...register('original_period', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 disabled:bg-gray-100" />
-            {errors.original_period && <p className="text-red-500 text-xs mt-1">{errors.original_period.message as string}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label>Original Period Number</Label>
+                <Input disabled={isEditing} type="number" min="1" {...register('original_period', { valueAsNumber: true })} className="disabled:bg-gray-100" />
+                {errors.original_period && <p className="text-destructive text-xs mt-1">{errors.original_period.message as string}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Original Subject Assignment</label>
-            <select disabled={isEditing} {...register('original_class_subject_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 disabled:bg-gray-100">
-              <option value={0}>Select...</option>
-              {availableSubjects.map(cs => (
-                <option key={cs.id} value={cs.id}>{getSubjectDisplay(cs.id)}</option>
-              ))}
-            </select>
-            {errors.original_class_subject_id && <p className="text-red-500 text-xs mt-1">{errors.original_class_subject_id.message as string}</p>}
-          </div>
+              <div className="space-y-2 lg:col-span-2">
+                <Label>Original Subject Assignment</Label>
+                <select disabled={isEditing} {...register('original_class_subject_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                  <option value={0}>Select...</option>
+                  {availableSubjects.map(cs => (
+                    <option key={cs.id} value={cs.id}>{getSubjectDisplay(cs.id)}</option>
+                  ))}
+                </select>
+                {errors.original_class_subject_id && <p className="text-destructive text-xs mt-1">{errors.original_class_subject_id.message as string}</p>}
+              </div>
 
-          {watchChangeType === 'SUBSTITUTION' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New Subject Assignment (Substitution)</label>
-              <select {...register('new_class_subject_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                <option value="">Select...</option>
-                {availableSubjects.map(cs => (
-                  <option key={cs.id} value={cs.id}>{getSubjectDisplay(cs.id)}</option>
-                ))}
-              </select>
-              {errors.new_class_subject_id && <p className="text-red-500 text-xs mt-1">{errors.new_class_subject_id.message as string}</p>}
+              {watchChangeType === 'SUBSTITUTION' && (
+                <div className="space-y-2 lg:col-span-2">
+                  <Label>New Subject Assignment (Substitution)</Label>
+                  <select {...register('new_class_subject_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option value="">Select...</option>
+                    {availableSubjects.map(cs => (
+                      <option key={cs.id} value={cs.id}>{getSubjectDisplay(cs.id)}</option>
+                    ))}
+                  </select>
+                  {errors.new_class_subject_id && <p className="text-destructive text-xs mt-1">{errors.new_class_subject_id.message as string}</p>}
+                </div>
+              )}
+
+              {watchChangeType === 'RESCHEDULING' && (
+                <div className="space-y-2 lg:col-span-2">
+                  <Label>New Period Number</Label>
+                  <Input type="number" min="1" {...register('new_period', { valueAsNumber: true })} />
+                  {errors.new_period && <p className="text-destructive text-xs mt-1">{errors.new_period.message as string}</p>}
+                </div>
+              )}
+
+              <div className="lg:col-span-4 space-y-2">
+                <Label>Reason (Optional)</Label>
+                <Input {...register('reason')} placeholder="e.g. Teacher on sick leave" />
+                {errors.reason && <p className="text-destructive text-xs mt-1">{errors.reason.message as string}</p>}
+              </div>
             </div>
-          )}
 
-          {watchChangeType === 'RESCHEDULING' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New Period Number</label>
-              <input type="number" min="1" {...register('new_period', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-              {errors.new_period && <p className="text-red-500 text-xs mt-1">{errors.new_period.message as string}</p>}
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Change' : 'Log Daily Change')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
             </div>
-          )}
+          </form>
+        </CardContent>
+      </Card>
 
-          <div className="lg:col-span-4">
-            <label className="block text-sm font-medium text-gray-700">Reason (Optional)</label>
-            <input {...register('reason')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. Teacher on sick leave" />
-            {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason.message as string}</p>}
-          </div>
-        </div>
-
-        <div className="flex gap-2 pt-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update Change' : 'Log Daily Change')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Class</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">New (If Applicable)</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date & Class</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Original</TableHead>
+              <TableHead>New (If Applicable)</TableHead>
+              <TableHead>Reason</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : changes.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No daily changes logged.</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No daily changes logged.</TableCell></TableRow>
             ) : (
               // Sort by date descending
               [...changes].sort((a,b) => new Date(b.change_date).getTime() - new Date(a.change_date).getTime()).map(change => {
                 const cls = classes.find(c => c.id === change.class_id);
 
                 return (
-                  <tr key={change.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <TableRow key={change.id}>
+                    <TableCell className="font-medium">
                       <div>{change.change_date?.split('T')[0]}</div>
-                      <div className="text-xs text-gray-500">{cls?.class_code || cls?.section_name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                      <div className="text-xs text-muted-foreground">{cls?.class_code || cls?.section_name}</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
                         {change.change_type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       <div>Period {change.original_period}</div>
                       <div className="text-xs">{getSubjectDisplay(change.original_class_subject_id)}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {change.new_period && <div>Moved to P{change.new_period}</div>}
                       {change.new_class_subject_id && <div className="text-xs">{getSubjectDisplay(change.new_class_subject_id)}</div>}
-                      {!change.new_period && !change.new_class_subject_id && <span className="text-gray-400">-</span>}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{change.reason || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {!change.new_period && !change.new_class_subject_id && <span className="text-muted-foreground">-</span>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{change.reason || '-'}</TableCell>
+                    <TableCell className="text-right">
                       <div className="flex justify-end gap-3">
                         <button onClick={() => editChange(change)} className="text-blue-600 hover:text-blue-900">
                           <Edit2 className="w-4 h-4" />
@@ -313,39 +328,31 @@ export default function DailyTimetableChanges() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {deleteId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Daily Change</h3>
-            <p className="text-sm text-gray-500 mb-6">
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Daily Change</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to delete this daily change? The timetable for this day will revert to the regular schedule.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleDelete}
-                className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

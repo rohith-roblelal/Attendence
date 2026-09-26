@@ -8,6 +8,14 @@ import { teachersApi } from '../../lib/api/teachers';
 import { usersApi } from '../../lib/api/users';
 import { Edit2, UserX } from 'lucide-react';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 const createTeacherSchema = z.object({
   user_id: z.number().int().positive('User is required'),
   teacher_id: z.string().min(1, 'Teacher ID is required').max(30),
@@ -41,11 +49,7 @@ export default function Teachers() {
     resolver: zodResolver(isEditing ? updateTeacherSchema : createTeacherSchema),
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [teachRes, usersRes] = await Promise.all([
@@ -68,6 +72,11 @@ export default function Teachers() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: any) => {
     setError(null);
     try {
@@ -125,110 +134,115 @@ export default function Teachers() {
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit Teacher Profile' : 'Create Teacher Profile'}</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {!isEditing && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Link to User Account</label>
-              <select {...register('user_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                <option value={0}>Select unlinked account...</option>
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
-                ))}
-              </select>
-              {errors.user_id && <p className="text-red-500 text-xs mt-1">{errors.user_id.message as string}</p>}
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit Teacher Profile' : 'Create Teacher Profile'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {!isEditing && (
+                <div className="space-y-2">
+                  <Label>Link to User Account</Label>
+                  <select {...register('user_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option value={0}>Select unlinked account...</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>{u.username} ({u.role})</option>
+                    ))}
+                  </select>
+                  {errors.user_id && <p className="text-destructive text-xs mt-1">{errors.user_id.message as string}</p>}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Teacher ID / Staff Code</Label>
+                <Input {...register('teacher_id')} placeholder="e.g. T-1234" />
+                {errors.teacher_id && <p className="text-destructive text-xs mt-1">{errors.teacher_id.message as string}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>First Name</Label>
+                <Input {...register('first_name')} />
+                {errors.first_name && <p className="text-destructive text-xs mt-1">{errors.first_name.message as string}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Last Name (Optional)</Label>
+                <Input {...register('last_name')} />
+                {errors.last_name && <p className="text-destructive text-xs mt-1">{errors.last_name.message as string}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Designation (Optional)</Label>
+                <Input {...register('designation')} placeholder="e.g. Associate Professor" />
+                {errors.designation && <p className="text-destructive text-xs mt-1">{errors.designation.message as string}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Join Date (Optional)</Label>
+                <Input type="date" {...register('joined_at')} />
+                {errors.joined_at && <p className="text-destructive text-xs mt-1">{errors.joined_at.message as string}</p>}
+              </div>
+
+              {isEditing && (
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <select {...register('status')} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="ON_LEAVE">ON LEAVE</option>
+                  </select>
+                  {errors.status && <p className="text-destructive text-xs mt-1">{errors.status.message as string}</p>}
+                </div>
+              )}
             </div>
-          )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Teacher ID / Staff Code</label>
-            <input {...register('teacher_id')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. T-1234" />
-            {errors.teacher_id && <p className="text-red-500 text-xs mt-1">{errors.teacher_id.message as string}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">First Name</label>
-            <input {...register('first_name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-            {errors.first_name && <p className="text-red-500 text-xs mt-1">{errors.first_name.message as string}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Last Name (Optional)</label>
-            <input {...register('last_name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-            {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name.message as string}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Designation (Optional)</label>
-            <input {...register('designation')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. Associate Professor" />
-            {errors.designation && <p className="text-red-500 text-xs mt-1">{errors.designation.message as string}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Join Date (Optional)</label>
-            <input type="date" {...register('joined_at')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-            {errors.joined_at && <p className="text-red-500 text-xs mt-1">{errors.joined_at.message as string}</p>}
-          </div>
-
-          {isEditing && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              <select {...register('status')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-                <option value="ON_LEAVE">ON LEAVE</option>
-              </select>
-              {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status.message as string}</p>}
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Teacher' : 'Create Teacher')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
             </div>
-          )}
-        </div>
+          </form>
+        </CardContent>
+      </Card>
 
-        <div className="flex gap-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update Teacher' : 'Create Teacher')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Designation</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID / Code</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Designation</TableHead>
+              <TableHead>Join Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : teachers.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No teachers found.</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No teachers found.</TableCell></TableRow>
             ) : (
               teachers.map(teacher => (
-                <tr key={teacher.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{teacher.teacher_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.first_name} {teacher.last_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.designation || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{teacher.joined_at?.split('T')[0] || '-'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${teacher.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <TableRow key={teacher.id}>
+                  <TableCell className="font-medium">{teacher.teacher_id}</TableCell>
+                  <TableCell>{teacher.first_name} {teacher.last_name}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.designation || '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.joined_at?.split('T')[0] || '-'}</TableCell>
+                  <TableCell>
+                    <Badge variant={teacher.status === 'ACTIVE' ? "default" : "destructive"}>
                       {teacher.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
                     <div className="flex justify-end gap-3">
                       <button onClick={() => editTeacher(teacher)} className="text-blue-600 hover:text-blue-900">
                         <Edit2 className="w-4 h-4" />
@@ -243,38 +257,28 @@ export default function Teachers() {
                         </button>
                       )}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
-      {deactivateId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Deactivate Teacher</h3>
-            <p className="text-sm text-gray-500 mb-6">
+      <AlertDialog open={!!deactivateId} onOpenChange={(open) => !open && setDeactivateId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Teacher</AlertDialogTitle>
+            <AlertDialogDescription>
               Are you sure you want to deactivate this teacher?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setDeactivateId(null)}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleDeactivate}
-                className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md"
-              >
-                Deactivate
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeactivate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Deactivate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -7,6 +7,14 @@ import * as z from 'zod';
 import { classesApi } from '../../lib/api/classes';
 import { academicApi } from '../../lib/api/academic';
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const classSchema = z.object({
   admission_batch_id: z.number().int().positive('Batch is required'),
   semester_id: z.number().int().positive('Semester is required'),
@@ -33,11 +41,7 @@ export default function Classes() {
     defaultValues: { is_active: true }
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [classRes, batchRes, semRes] = await Promise.all([
@@ -56,6 +60,11 @@ export default function Classes() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: ClassFormData) => {
     setError(null);
     try {
@@ -98,105 +107,110 @@ export default function Classes() {
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white p-4 rounded shadow-sm border border-gray-100 space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit' : 'Create'} Class</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Admission Batch</label>
-            <select {...register('admission_batch_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>Select...</option>
-              {batches.map(b => (
-                <option key={b.id} value={b.id}>{b.batch_name}</option>
-              ))}
-            </select>
-            {errors.admission_batch_id && <p className="text-red-500 text-xs mt-1">{errors.admission_batch_id.message}</p>}
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isEditing ? 'Edit' : 'Create'} Class</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="admission_batch_id">Admission Batch</Label>
+                <select id="admission_batch_id" {...register('admission_batch_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>Select...</option>
+                  {batches.map(b => (
+                    <option key={b.id} value={b.id}>{b.batch_name}</option>
+                  ))}
+                </select>
+                {errors.admission_batch_id && <p className="text-destructive text-xs mt-1">{errors.admission_batch_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Semester</label>
-            <select {...register('semester_id', { valueAsNumber: true })} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
-              <option value={0}>Select...</option>
-              {semesters.map(s => (
-                <option key={s.id} value={s.id}>{s.name} ({s.semester_number})</option>
-              ))}
-            </select>
-            {errors.semester_id && <p className="text-red-500 text-xs mt-1">{errors.semester_id.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="semester_id">Semester</Label>
+                <select id="semester_id" {...register('semester_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>Select...</option>
+                  {semesters.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.semester_number})</option>
+                  ))}
+                </select>
+                {errors.semester_id && <p className="text-destructive text-xs mt-1">{errors.semester_id.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Section Name</label>
-            <input {...register('section_name')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. A" />
-            {errors.section_name && <p className="text-red-500 text-xs mt-1">{errors.section_name.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="section_name">Section Name</Label>
+                <Input id="section_name" {...register('section_name')} placeholder="e.g. A" />
+                {errors.section_name && <p className="text-destructive text-xs mt-1">{errors.section_name.message}</p>}
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Class Code (Optional)</label>
-            <input {...register('class_code')} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="e.g. CS-A" />
-            {errors.class_code && <p className="text-red-500 text-xs mt-1">{errors.class_code.message}</p>}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="class_code">Class Code (Optional)</Label>
+                <Input id="class_code" {...register('class_code')} placeholder="e.g. CS-A" />
+                {errors.class_code && <p className="text-destructive text-xs mt-1">{errors.class_code.message}</p>}
+              </div>
 
-          <div className="flex items-center">
-            <input type="checkbox" id="class_is_active" {...register('is_active')} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-            <label htmlFor="class_is_active" className="ml-2 block text-sm text-gray-900">Active</label>
-          </div>
-        </div>
+              <div className="flex items-center space-x-2 pt-4">
+                <Checkbox id="class_is_active" {...register('is_active')} />
+                <Label htmlFor="class_is_active">Active</Label>
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
-            {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
-          </button>
-          {isEditing && (
-            <button type="button" onClick={cancelEdit} className="bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm hover:bg-gray-300">
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+              </Button>
+              {isEditing && (
+                <Button type="button" variant="outline" onClick={cancelEdit}>
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded shadow-sm border border-gray-100 overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Code</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+      <div className="border rounded-md overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Class Code</TableHead>
+              <TableHead>Section</TableHead>
+              <TableHead>Batch</TableHead>
+              <TableHead>Semester</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">Loading...</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : classes.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">No classes found.</td></tr>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No classes found.</TableCell></TableRow>
             ) : (
               classes.map(cls => {
                 const batch = batches.find(b => b.id === cls.admission_batch_id);
                 const sem = semesters.find(s => s.id === cls.semester_id);
                 return (
-                  <tr key={cls.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{cls.class_code || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{cls.section_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{batch?.batch_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{sem?.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${cls.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  <TableRow key={cls.id}>
+                    <TableCell className="font-medium">{cls.class_code || '-'}</TableCell>
+                    <TableCell>{cls.section_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{batch?.batch_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{sem?.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={cls.is_active ? "default" : "destructive"}>
                         {cls.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => editClass(cls)} className="text-blue-600 hover:text-blue-900">Edit</button>
-                    </td>
-                  </tr>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="link" onClick={() => editClass(cls)}>Edit</Button>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

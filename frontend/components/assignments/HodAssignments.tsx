@@ -38,11 +38,7 @@ export default function HodAssignments() {
     resolver: zodResolver(isEditing ? updateHodSchema : createHodSchema),
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+const fetchData = async () => {
     setLoading(true);
     try {
       const [assnRes, deptRes, teachRes, yearRes] = await Promise.all([
@@ -63,6 +59,11 @@ export default function HodAssignments() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  
   const onSubmit = async (data: any) => {
     setError(null);
     try {

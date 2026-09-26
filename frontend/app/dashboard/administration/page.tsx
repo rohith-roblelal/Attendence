@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import { apiClient } from '../../../lib/api/client';
 import { Users, BookOpen, Layers, UserCheck, Shield } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface AdminStats {
   counts: {
@@ -20,6 +21,20 @@ interface AdminStats {
     present_records: number;
   };
 }
+
+const StatCard = ({ title, value, icon: Icon, colorClass }: { title: string, value: string | number, icon: any, colorClass: string }) => (
+  <Card>
+    <CardContent className="p-6 flex items-center gap-4">
+      <div className={`p-4 rounded-lg ${colorClass}`}>
+        <Icon className="w-6 h-6 text-white" />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="text-2xl font-bold tracking-tight">{value}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default function AdministrationDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -41,18 +56,6 @@ export default function AdministrationDashboard() {
     fetchStats();
   }, []);
 
-  const StatCard = ({ title, value, icon: Icon, colorClass }: { title: string, value: string | number, icon: any, colorClass: string }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-      <div className={`p-4 rounded-lg ${colorClass}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-      <div>
-        <p className="text-sm font-medium text-gray-500">{title}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-      </div>
-    </div>
-  );
-
   return (
     <ProtectedRoute allowedRoles={['ADMINISTRATION']}>
       <div className="space-y-6">
@@ -61,9 +64,9 @@ export default function AdministrationDashboard() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-10 text-gray-500">Loading statistics...</div>
+          <div className="text-center py-10 text-muted-foreground">Loading statistics...</div>
         ) : error ? (
-          <div className="bg-red-50 text-red-600 p-4 rounded-md">{error}</div>
+          <div className="bg-destructive/10 text-destructive p-4 rounded-md">{error}</div>
         ) : stats ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
