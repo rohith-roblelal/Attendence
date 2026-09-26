@@ -1,0 +1,45 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+**/dist/
+**/build/
+**/.next/
+
+# Environment files — NEVER commit secrets
+backend/.env
+frontend/.env.local
+frontend/.env.production
+**/.env.local
+**/.env.production
+
+# Development-only scripts (not for production)
+backend/seed_admin.js
+backend/get_users.js
+backend/check_roles.js
+backend/fix.js
+backend/fix2.js
+backend/patch.js
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Flutter/Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/pubspec.lock
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
