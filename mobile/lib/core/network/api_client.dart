@@ -3,14 +3,13 @@ import 'package:mobile/core/storage/local_storage.dart';
 
 class ApiClient {
   static final Dio _dio = Dio(BaseOptions(
-    // We assume backend runs on localhost:3000. 
-    // Use 10.0.2.2 for Android emulator to access host localhost.
-    baseUrl: 'http://10.0.2.2:3000/api/v1', 
-    connectTimeout: const Duration(seconds: 10),
+    // We will use localtunnel to completely bypass firewalls and adb!
+    baseUrl: 'https://angry-wombats-pull.loca.lt/api/v1',
     receiveTimeout: const Duration(seconds: 10),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Bypass-Tunnel-Reminder': 'true',
     },
   ));
 

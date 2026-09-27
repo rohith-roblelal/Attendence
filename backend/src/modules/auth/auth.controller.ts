@@ -14,7 +14,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       maxAge: 3600000, // 1 hour
     });
 
-    res.status(200).json({ status: 'success', data: { user } });
+    res.status(200).json({ status: 'success', data: { user, token } });
   } catch (error) {
     next(error);
   }

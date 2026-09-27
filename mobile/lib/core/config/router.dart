@@ -7,7 +7,7 @@ import 'package:mobile/features/auth/presentation/login_screen.dart';
 // Placeholder dashboards
 class PlaceholderScreen extends StatelessWidget {
   final String title;
-  const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
+  const PlaceholderScreen({super.key, required this.title});
   @override
   Widget build(BuildContext context) {
     return Scaffold(

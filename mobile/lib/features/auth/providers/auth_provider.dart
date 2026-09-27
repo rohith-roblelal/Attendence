@@ -62,7 +62,7 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     } catch (e) {
-      _error = 'An unexpected error occurred.';
+      _error = 'Unexpected error: $e';
       _setLoading(false);
       return false;
     }

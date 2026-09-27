@@ -7,8 +7,8 @@ const startServer = async () => {
   // Test Database Connection
   await testConnection();
 
-  const server = app.listen(env.PORT, () => {
-    logger.info(`🚀 Server running on http://localhost:${env.PORT}`);
+  const server = app.listen(env.PORT, '::', () => {
+    logger.info(`🚀 Server running on http://[::]:${env.PORT}`);
   });
 
   // Graceful shutdown
