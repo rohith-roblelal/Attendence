@@ -6,7 +6,7 @@
 **Database:** MySQL / MariaDB
 **Development Environment:** XAMPP
 **Development MySQL Port:** 3306
-**Architecture:** Web + Mobile → Backend API → MySQL/MariaDB
+**Architecture:** Web → Backend API → MySQL/MariaDB
 
 ---
 
@@ -55,7 +55,7 @@ The database follows these principles:
 7. Foreign-key relationships must protect data integrity.
 8. Records should generally be deactivated rather than physically deleted when historical data depends on them.
 9. Database constraints should prevent duplicate attendance and conflicting assignments.
-10. Business logic should remain in the backend rather than being duplicated across web and mobile applications.
+10. Business logic should remain in the backend rather than being duplicated in the web application.
 
 ---
 

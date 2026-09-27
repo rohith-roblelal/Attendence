@@ -9,10 +9,6 @@ The application should use a layered architecture:
 │       Web Application         │
 └───────────────┬───────────────┘
                 │
-┌───────────────▼───────────────┐
-│        Mobile Application     │
-└───────────────┬───────────────┘
-                │
                 ▼
 ┌───────────────────────────────┐
 │          Backend API          │
@@ -40,7 +36,6 @@ The application should use a layered architecture:
 Contains:
 
 * Web UI
-* Mobile UI
 * Forms
 * Dashboards
 * Attendance interfaces
@@ -621,9 +616,7 @@ Conceptually:
 ```text
 attendance-system/
 │
-├── web/
-│
-├── mobile/
+├── frontend/
 │
 ├── backend/
 │   ├── authentication/

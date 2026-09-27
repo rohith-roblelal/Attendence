@@ -4,7 +4,7 @@
 
 **Product Name:** College Attendance Management System
 
-**Product Type:** Web + Mobile Application
+**Product Type:** Web Application
 
 **Primary Purpose:** Student attendance management and monitoring
 
@@ -381,7 +381,7 @@ The system should provide:
 * Reliable historical records.
 * Role-based access.
 * Responsive UI.
-* Mobile-friendly interfaces.
+* Mobile-friendly web interfaces.
 * Clear attendance visualization.
 * Fast attendance entry.
 * Reliable database transactions.
@@ -411,4 +411,4 @@ Still to be finalized:
 * Exact authentication method.
 * Exact subject catalogue structure.
 * Exact required attendance percentage.
-* Final mobile/web technology stack.
+* Final web technology stack.

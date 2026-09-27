@@ -5,7 +5,6 @@
 The system is a centralized attendance platform consisting of:
 
 * Web application
-* Mobile application
 * Backend API
 * MySQL/MariaDB database
 * Authentication and authorization layer

@@ -31,12 +31,6 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Flutter/Dart
-mobile/.dart_tool/
-mobile/build/
-mobile/.flutter-plugins
-mobile/.flutter-plugins-dependencies
-mobile/pubspec.lock
 
 # IDE
 .vscode/
