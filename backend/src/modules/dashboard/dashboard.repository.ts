@@ -188,7 +188,7 @@ export const getTutorStudents = async (classId: number) => {
     LEFT JOIN attendance_records a ON a.student_id = s.id AND a.class_session_id = cs.id
     WHERE se.class_id = ? AND s.status = 'ACTIVE'
     GROUP BY s.id, s.student_id, s.first_name, s.last_name
-    ORDER BY s.first_name ASC
+    ORDER BY s.student_id ASC
   `, [classId, classId]);
 
   const [timetable] = await pool.query(`
@@ -227,16 +227,35 @@ export const getTeacherStats = async (teacherId: number) => {
     WHERE cs.status = 'CONDUCTED' AND cs.conducted_by_teacher_id = ?
   `, [teacherId]);
 
+  const [classes] = await pool.query(`
+    SELECT DISTINCT
+      c.id, b.batch_name, c.section_name, sem.name as semester_name, c.is_active as status
+    FROM classes c
+    JOIN admission_batches b ON c.admission_batch_id = b.id
+    JOIN class_subjects cs ON cs.class_id = c.id
+    JOIN semesters sem ON c.semester_id = sem.id
+    WHERE cs.teacher_id = ? AND cs.is_active = TRUE
+  `, [teacherId]);
+
+  const [assignments] = await pool.query(`
+    SELECT 
+      cs.id as class_subject_id, cs.class_id, cs.subject_id, cs.is_active, cs.teacher_id
+    FROM class_subjects cs
+    WHERE cs.teacher_id = ? AND cs.is_active = TRUE
+  `, [teacherId]);
+
   return {
     counts: (counts as any[])[0],
-    attendanceOverview: (attendance as any[])[0]
+    attendanceOverview: (attendance as any[])[0],
+    classes: classes as any[],
+    assignments: assignments as any[]
   };
 };
 
 export const getTeacherTimetable = async (teacherId: number) => {
   const [timetable] = await pool.query(`
     SELECT 
-      rte.id, rte.day_of_week, rte.period_number,
+      rte.id, rte.day_of_week, rte.period_number, rte.class_id, rte.class_subject_id, rte.is_active,
       sub.name as subject_name, sub.code as subject_code,
       CONCAT(b.batch_name, ' - ', sem.name, ' - ', c.section_name) as class_name
     FROM regular_timetable_entries rte
@@ -303,22 +322,46 @@ export const getStudentStats = async (studentId: number) => {
   `, [studentId]);
 
   // Subject-wise attendance
-  const [subjectAttendance] = await pool.query(`
-    SELECT 
-      sub.id as subject_id,
-      sub.name as subject_name,
-      sub.code as subject_code,
-      COUNT(a.id) as total_sessions,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions,
-      SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_sessions
-    FROM attendance_records a
-    JOIN class_sessions cs ON a.class_session_id = cs.id
-    JOIN class_subjects csj ON cs.class_subject_id = csj.id
-    JOIN subjects sub ON csj.subject_id = sub.id
-    WHERE a.student_id = ? AND cs.status = 'CONDUCTED'
-    GROUP BY sub.id, sub.name, sub.code
-    ORDER BY sub.name ASC
-  `, [studentId]);
+  let subjectAttendance: any[] = [];
+  if (classId) {
+    const [rows] = await pool.query(`
+      SELECT 
+        sub.id as subject_id,
+        sub.name as subject_name,
+        sub.code as subject_code,
+        COUNT(cs.id) as total_sessions,
+        SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions,
+        SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_sessions
+      FROM class_subjects csj
+      JOIN subjects sub ON csj.subject_id = sub.id
+      LEFT JOIN class_sessions cs ON cs.class_subject_id = csj.id AND cs.status = 'CONDUCTED'
+      LEFT JOIN attendance_records a ON a.class_session_id = cs.id AND a.student_id = ?
+      WHERE csj.class_id = ? AND csj.is_active = TRUE
+      GROUP BY sub.id, sub.name, sub.code
+      HAVING COUNT(cs.id) > 0
+      ORDER BY sub.name ASC
+    `, [studentId, classId]);
+    subjectAttendance = rows as any[];
+  } else {
+    // Fallback if classId not found (e.g. graduated student)
+    const [rows] = await pool.query(`
+      SELECT 
+        sub.id as subject_id,
+        sub.name as subject_name,
+        sub.code as subject_code,
+        COUNT(a.id) as total_sessions,
+        SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions,
+        SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_sessions
+      FROM attendance_records a
+      JOIN class_sessions cs ON a.class_session_id = cs.id
+      JOIN class_subjects csj ON cs.class_subject_id = csj.id
+      JOIN subjects sub ON csj.subject_id = sub.id
+      WHERE a.student_id = ? AND cs.status = 'CONDUCTED'
+      GROUP BY sub.id, sub.name, sub.code
+      ORDER BY sub.name ASC
+    `, [studentId]);
+    subjectAttendance = rows as any[];
+  }
 
   const requiredPercentage = 75.00;
   const total = Number((attendance as any[])[0]?.total_records || 0);

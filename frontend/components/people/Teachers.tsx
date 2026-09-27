@@ -265,11 +265,11 @@ const fetchData = async () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-3">
-                      <button onClick={() => editTeacher(teacher)} className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => editTeacher(teacher)} className="text-primary hover:text-primary">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       {teacher.status === 'ACTIVE' ? (
-                        <button onClick={() => setDeactivateId(teacher.id)} className="text-red-600 hover:text-red-900">
+                        <button onClick={() => setDeactivateId(teacher.id)} className="text-destructive hover:text-red-900">
                           <UserX className="w-4 h-4" />
                         </button>
                       ) : (

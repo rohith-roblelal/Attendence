@@ -27,8 +27,8 @@ const navItems: NavItem[] = [
   { name: 'Students & Teachers', href: '/dashboard/administration/people', icon: Users, roles: ['ADMINISTRATION'], group: 'PEOPLE' },
   { name: 'HOD & Tutors', href: '/dashboard/administration/hod-tutor', icon: Shield, roles: ['ADMINISTRATION'], group: 'PEOPLE' },
   
-  { name: 'Attendance', href: '/dashboard/administration/attendance', icon: UserCheck, roles: ['ADMINISTRATION'], group: 'ATTENDANCE' },
-  { name: 'Reports', href: '/dashboard/administration/reports', icon: BarChart3, roles: ['ADMINISTRATION'], group: 'ATTENDANCE' },
+  { name: 'Attendance', href: '/dashboard/administration/attendence', icon: UserCheck, roles: ['ADMINISTRATION'], group: 'ATTENDANCE' },
+  { name: 'Reports', href: '/dashboard/report', icon: BarChart3, roles: ['ADMINISTRATION'], group: 'ATTENDANCE' },
   
   { name: 'User Management', href: '/dashboard/administration/users', icon: Settings, roles: ['ADMINISTRATION'], group: 'SYSTEM' },
 

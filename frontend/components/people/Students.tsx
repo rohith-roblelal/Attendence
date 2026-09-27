@@ -7,7 +7,9 @@ import * as z from 'zod';
 import { studentsApi } from '../../lib/api/students';
 import { usersApi } from '../../lib/api/users';
 import { classesApi } from '../../lib/api/classes';
-import { Edit2, UserX, GitCommit } from 'lucide-react';
+import { apiClient } from '../../lib/api/client';
+import { useAuth } from '../../lib/auth/AuthContext';
+import { Edit2, UserX, GitCommit, BarChart2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +47,9 @@ const transferStudentSchema = z.object({
 });
 
 export default function Students() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRATION';
+
   const [students, setStudents] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
@@ -57,6 +62,23 @@ export default function Students() {
   
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
   const [transferStudent, setTransferStudent] = useState<any | null>(null);
+
+  const [statsDialog, setStatsDialog] = useState<{ open: boolean; student: any; loading: boolean; data: any }>({
+    open: false,
+    student: null,
+    loading: false,
+    data: null,
+  });
+
+  const viewStats = async (student: any) => {
+    setStatsDialog({ open: true, student, loading: true, data: null });
+    try {
+      const res = await apiClient.get(`/dashboard/tutor/students/${student.id || student.student_id}/stats`);
+      setStatsDialog(prev => ({ ...prev, loading: false, data: res.data.data }));
+    } catch (err) {
+      setStatsDialog(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<any>({
     resolver: zodResolver(isEditing ? updateStudentSchema : createStudentSchema),
@@ -71,23 +93,39 @@ export default function Students() {
     resolver: zodResolver(transferStudentSchema),
   });
 
-const fetchData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const [studRes, usersRes, classRes] = await Promise.all([
-        studentsApi.getStudents(),
-        usersApi.getUsers(),
-        classesApi.getClasses()
-      ]);
-      setStudents(studRes.data.data);
-      
-      const allUsers = usersRes.data.data.users || [];
-      const studentUserIds = studRes.data.data.map((s: any) => s.user_id);
-      setUsers(allUsers.filter((u: any) => 
-        u.role === 'STUDENT' && !studentUserIds.includes(u.id)
-      ));
-      
-      setClasses(classRes.data.data);
+      if (isAdmin) {
+        const [studRes, usersRes, classRes] = await Promise.all([
+          studentsApi.getStudents(),
+          usersApi.getUsers(),
+          classesApi.getClasses()
+        ]);
+        setStudents(studRes.data.data);
+        
+        const allUsers = usersRes.data.data.users || [];
+        const studentUserIds = studRes.data.data.map((s: any) => s.user_id);
+        setUsers(allUsers.filter((u: any) => 
+          u.role === 'STUDENT' && !studentUserIds.includes(u.id)
+        ));
+        
+        setClasses(classRes.data.data);
+      } else {
+        // Tutors/Teachers only see their assigned students
+        const studRes = await apiClient.get('/dashboard/tutor/students');
+        const rawStudents = studRes.data.data.students || [];
+        // The tutor API returns differently named fields. We map them back to standard names for the table.
+        const mappedStudents = rawStudents.map((s: any) => ({
+          id: s.student_id, // Database primary key
+          student_id: s.admission_number, // The Roll Number/Admission number
+          first_name: s.student_name,
+          last_name: '', // already concatenated into first_name
+          status: 'ACTIVE', // The query only selects active students
+          admission_number: ''
+        }));
+        setStudents(mappedStudents);
+      }
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch data');
@@ -182,8 +220,9 @@ const fetchData = async () => {
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <Card>
-        <CardHeader>
+      {isAdmin && (
+        <Card>
+          <CardHeader>
           <CardTitle>{isEditing ? 'Edit Student Profile' : 'Create Student Profile'}</CardTitle>
         </CardHeader>
         <CardContent>
@@ -278,6 +317,7 @@ const fetchData = async () => {
           </form>
         </CardContent>
       </Card>
+      )}
 
       <div className="border rounded-md overflow-x-auto">
         <Table>
@@ -286,7 +326,8 @@ const fetchData = async () => {
               <TableHead>ID / Adm No</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {isAdmin && <TableHead className="text-right">Actions</TableHead>}
+              {!isAdmin && <TableHead className="text-right">Details</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -295,37 +336,46 @@ const fetchData = async () => {
             ) : students.length === 0 ? (
               <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No students found.</TableCell></TableRow>
             ) : (
-              students.map(student => (
-                <TableRow key={student.id}>
+              students.map((student: any) => (
+                <TableRow key={student.id || student.student_id}>
                   <TableCell className="font-medium">
-                    <div>{student.student_id}</div>
+                    <div>{student.student_id || student.admission_number}</div>
                     <div className="text-xs text-muted-foreground">{student.admission_number || '-'}</div>
                   </TableCell>
-                  <TableCell>{student.first_name} {student.last_name}</TableCell>
+                  <TableCell>{student.first_name || student.student_name} {student.last_name || ''}</TableCell>
                   <TableCell>
-                    <Badge variant={student.status === 'ACTIVE' ? "default" : "destructive"}>
-                      {student.status}
+                    <Badge variant={(student.status || 'ACTIVE') === 'ACTIVE' ? "default" : "destructive"}>
+                      {student.status || 'ACTIVE'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-3">
-                      <button onClick={() => setTransferStudent(student)} className="text-purple-600 hover:text-purple-900" title="Transfer Class">
-                        <GitCommit className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => editStudent(student)} className="text-blue-600 hover:text-blue-900" title="Edit Profile">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      {student.status === 'ACTIVE' ? (
-                        <button onClick={() => setDeactivateId(student.id)} className="text-red-600 hover:text-red-900" title="Deactivate">
-                          <UserX className="w-4 h-4" />
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-3">
+                        <button onClick={() => setTransferStudent(student)} className="text-purple-600 hover:text-purple-900" title="Transfer Class">
+                          <GitCommit className="w-4 h-4" />
                         </button>
-                      ) : (
-                        <button disabled className="text-gray-300 cursor-not-allowed">
-                          <UserX className="w-4 h-4" />
+                        <button onClick={() => editStudent(student)} className="text-primary hover:text-primary" title="Edit Profile">
+                          <Edit2 className="w-4 h-4" />
                         </button>
-                      )}
-                    </div>
-                  </TableCell>
+                        {student.status === 'ACTIVE' ? (
+                          <button onClick={() => setDeactivateId(student.id)} className="text-destructive hover:text-red-900" title="Deactivate">
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button disabled className="text-gray-300 cursor-not-allowed">
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {!isAdmin && (
+                    <TableCell className="text-right">
+                      <button onClick={() => viewStats(student)} className="text-primary hover:text-primary/80" title="View Subject Attendance">
+                        <BarChart2 className="w-5 h-5 ml-auto" />
+                      </button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
@@ -381,6 +431,61 @@ const fetchData = async () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={statsDialog.open} onOpenChange={(open) => setStatsDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Student Attendance Details</DialogTitle>
+            <DialogDescription>
+              {statsDialog.student && `${statsDialog.student.first_name || statsDialog.student.student_name} (${statsDialog.student.admission_number || statsDialog.student.student_id})`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {statsDialog.loading ? (
+              <div className="text-center text-muted-foreground py-8">Loading attendance data...</div>
+            ) : statsDialog.data && statsDialog.data.subjectAttendance && statsDialog.data.subjectAttendance.length > 0 ? (
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead className="text-center">Total Sessions</TableHead>
+                      <TableHead className="text-center">Present</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {statsDialog.data.subjectAttendance.map((sub: any) => {
+                      const total = Number(sub.total_sessions || 0);
+                      const present = Number(sub.present_sessions || 0);
+                      const percent = total > 0 ? Math.round((present / total) * 100) : 0;
+                      return (
+                        <TableRow key={sub.subject_id}>
+                          <TableCell className="font-medium">
+                            <div>{sub.subject_name}</div>
+                            <div className="text-xs text-muted-foreground">{sub.subject_code}</div>
+                          </TableCell>
+                          <TableCell className="text-center">{total}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">{present}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={percent >= 75 ? "default" : "destructive"}>{percent}%</Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-8">No attendance records found for this student.</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setStatsDialog(prev => ({ ...prev, open: false }))}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

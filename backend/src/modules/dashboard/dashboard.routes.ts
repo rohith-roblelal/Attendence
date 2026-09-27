@@ -12,6 +12,7 @@ router.get('/hod', authorize('HOD'), ctrl.getHodStats);
 router.get('/hod/people', authorize('HOD'), ctrl.getHodPeople);
 router.get('/tutor', authorize('TUTOR'), ctrl.getTutorStats);
 router.get('/tutor/students', authorize('TUTOR'), ctrl.getTutorStudents);
+router.get('/tutor/students/:id/stats', authorize('TUTOR'), ctrl.getTutorStudentStatsById);
 router.get('/teacher', authorize('TEACHER', 'TUTOR', 'HOD'), ctrl.getTeacherStats);
 router.get('/teacher/timetable', authorize('TEACHER', 'TUTOR', 'HOD'), ctrl.getTeacherTimetable);
 router.get('/teacher/sessions', authorize('TEACHER', 'TUTOR', 'HOD'), ctrl.getTeacherSessions);

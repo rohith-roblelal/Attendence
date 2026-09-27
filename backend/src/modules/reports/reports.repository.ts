@@ -34,7 +34,7 @@ export const getClassAttendanceReport = async (classId: number) => {
     LEFT JOIN attendance_records a ON s.id = a.student_id AND a.class_session_id = cs.id
     WHERE se.class_id = ? AND s.status = 'ACTIVE'
     GROUP BY s.id, s.admission_number, s.student_id, s.first_name, s.last_name
-    ORDER BY s.first_name ASC
+    ORDER BY s.id ASC
   `, [classId, classId]);
 
   return report as any[];
@@ -53,6 +53,7 @@ export const getSubjectAttendanceReport = async (subjectId: number) => {
     JOIN students s ON a.student_id = s.id
     WHERE csj.subject_id = ? AND cs.status = 'CONDUCTED'
     GROUP BY s.id, s.admission_number, s.student_id, s.first_name, s.last_name
+    ORDER BY s.id ASC
   `, [subjectId]);
 
   return report as any[];

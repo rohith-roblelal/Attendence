@@ -8,6 +8,8 @@ import { classSubjectsApi } from '../../lib/api/class-subjects';
 import { subjectsApi } from '../../lib/api/subjects';
 import { studentsApi } from '../../lib/api/students';
 import { attendanceApi } from '../../lib/api/attendance';
+import { apiClient } from '../../lib/api/client';
+import { useAuth } from '../../lib/auth/AuthContext';
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,6 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function QuickAttendance() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRATION';
+
   const [classes, setClasses] = useState<any[]>([]);
   const [classSubjects, setClassSubjects] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -44,14 +49,34 @@ export default function QuickAttendance() {
   const fetchBaseData = async () => {
     setLoadingData(true);
     try {
-      const [clsRes, csRes, subRes] = await Promise.all([
-        classesApi.getClasses(),
-        classSubjectsApi.getAll(),
-        subjectsApi.getSubjects()
-      ]);
-      setClasses(clsRes.data.data);
-      setClassSubjects(csRes.data.data);
-      setSubjects(subRes.data.data);
+      if (isAdmin) {
+        const [clsRes, csRes, subRes] = await Promise.all([
+          classesApi.getClasses(),
+          classSubjectsApi.getAll(),
+          subjectsApi.getSubjects()
+        ]);
+        setClasses(clsRes.data.data.filter((c: any) => c.status === 'ACTIVE'));
+        setClassSubjects(csRes.data.data);
+        setSubjects(subRes.data.data);
+      } else {
+        const [teacherRes, subRes] = await Promise.all([
+          apiClient.get('/dashboard/teacher'),
+          subjectsApi.getSubjects()
+        ]);
+        
+        const teacherData = teacherRes.data.data;
+        // Map assignments to match the shape expected by the UI
+        const mappedSubjects = (teacherData.assignments || []).map((a: any) => ({
+          id: a.class_subject_id || a.id,
+          class_id: a.class_id,
+          subject_id: a.subject_id,
+          is_active: true
+        }));
+        
+        setClasses(teacherData.classes || []);
+        setClassSubjects(mappedSubjects);
+        setSubjects(subRes.data.data);
+      }
     } catch (err: any) {
       setError('Failed to fetch foundational data');
     } finally {
@@ -212,23 +237,23 @@ export default function QuickAttendance() {
     return subjects.find(s => s.id === subjectId)?.name || 'Unknown Subject';
   };
 
-  if (loadingData) return <div className="p-4 text-gray-500">Loading foundational data...</div>;
+  if (loadingData) return <div className="p-4 text-muted-foreground">Loading foundational data...</div>;
 
   return (
     <div className="space-y-6 relative">
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center transform animate-in zoom-in-95 duration-500">
+          <div className="bg-card text-card-foreground dark:bg-zinc-900 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center transform animate-in zoom-in-95 duration-500">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
               <svg className="w-8 h-8 animate-[ping_0.5s_cubic-bezier(0,0,0.2,1)_reverse]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">Success!</h3>
-            <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+            <h3 className="text-xl font-bold text-foreground dark:text-white mb-2 text-center">Success!</h3>
+            <p className="text-muted-foreground dark:text-muted-foreground text-center mb-6">
               Attendance successfully recorded. Returning to dashboard...
             </p>
-            <div className="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-muted dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
               <div className="bg-green-500 h-full animate-[progress_2s_ease-in-out_forwards]" />
             </div>
             <style>{`
@@ -241,7 +266,7 @@ export default function QuickAttendance() {
         </div>
       )}
       
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       {success && <div className="bg-green-50 text-green-700 p-3 rounded">{success}</div>}
       
       <Card>
@@ -378,7 +403,7 @@ export default function QuickAttendance() {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input 
                               type="checkbox"
-                              className="w-5 h-5 cursor-pointer accent-green-600 rounded"
+                              className="w-5 h-5 cursor-pointer accent-green-600 rounded bg-background text-foreground"
                               checked={currentMark === 'PRESENT'}
                               onChange={(e) => {
                                 setAttendanceMarks(prev => ({ 

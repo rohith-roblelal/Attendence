@@ -1,21 +1,15 @@
 'use client';
 
-import ProtectedRoute from '../../../../components/ProtectedRoute';
 import QuickAttendance from '../../../../components/operations/QuickAttendance';
 
-export default function TeacherTakeAttendancePage() {
+export default function TakeAttendancePage() {
   return (
-    <ProtectedRoute allowedRoles={['TEACHER', 'TUTOR', 'HOD']}>
-      <div className="space-y-6 max-w-6xl mx-auto pb-10">
-        
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Take Attendance</h1>
-          <p className="text-muted-foreground mt-1">Select your class and hour, and mark student attendance instantly.</p>
-        </div>
-
-        <QuickAttendance />
-
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Take Attendance</h1>
+        <p className="text-muted-foreground">Quickly mark attendance for your current sessions.</p>
       </div>
-    </ProtectedRoute>
+      <QuickAttendance />
+    </div>
   );
 }

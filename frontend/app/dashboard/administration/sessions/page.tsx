@@ -1,21 +1,25 @@
 'use client';
 
-import ProtectedRoute from '../../../../components/ProtectedRoute';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ClassSessions from '../../../../components/operations/ClassSessions';
+import ClassSubjects from '../../../../components/assignments/ClassSubjects';
 
 export default function SessionsPage() {
   return (
-    <ProtectedRoute allowedRoles={['ADMINISTRATION']}>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Class Sessions Tracker</h1>
-        <p className="text-gray-600 text-sm">
-          Log and manage individual class sessions. This forms the basis for accurate attendance tracking.
-        </p>
-
-        <div className="mt-6">
-          <ClassSessions />
-        </div>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Class Sessions</h1>
+        <p className="text-muted-foreground">Assign subjects to classes and record individual session instances.</p>
       </div>
-    </ProtectedRoute>
+
+      <Tabs defaultValue="sessions">
+        <TabsList>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="assignments">Class-Subject Assignments</TabsTrigger>
+        </TabsList>
+        <TabsContent value="sessions" className="mt-6"><ClassSessions /></TabsContent>
+        <TabsContent value="assignments" className="mt-6"><ClassSubjects /></TabsContent>
+      </Tabs>
+    </div>
   );
 }

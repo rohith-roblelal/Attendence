@@ -19,7 +19,7 @@ export const getStudents = async (filters: any) => {
     values.push(filters.user_id);
   }
   
-  query += ' ORDER BY s.first_name ASC';
+  query += ' ORDER BY s.student_id ASC';
   const [rows] = await pool.query(query, values);
   return rows;
 };

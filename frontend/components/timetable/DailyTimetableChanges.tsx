@@ -175,7 +175,7 @@ export default function DailyTimetableChanges() {
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
       <Alert className="bg-blue-50 text-blue-800 border-blue-200">
         <AlertDescription>
@@ -192,7 +192,7 @@ export default function DailyTimetableChanges() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Class</Label>
-                <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted">
                   <option value={0}>Select...</option>
                   {classes.map(c => (
                     <option key={c.id} value={c.id}>{c.class_code || c.section_name}</option>
@@ -203,7 +203,7 @@ export default function DailyTimetableChanges() {
 
               <div className="space-y-2">
                 <Label>Date of Change</Label>
-                <Input disabled={isEditing} type="date" {...register('change_date')} className="disabled:bg-gray-100" />
+                <Input disabled={isEditing} type="date" {...register('change_date')} className="disabled:bg-muted" />
                 {errors.change_date && <p className="text-destructive text-xs mt-1">{errors.change_date.message as string}</p>}
               </div>
 
@@ -219,13 +219,13 @@ export default function DailyTimetableChanges() {
 
               <div className="space-y-2">
                 <Label>Original Period Number</Label>
-                <Input disabled={isEditing} type="number" min="1" {...register('original_period', { valueAsNumber: true })} className="disabled:bg-gray-100" />
+                <Input disabled={isEditing} type="number" min="1" {...register('original_period', { valueAsNumber: true })} className="disabled:bg-muted" />
                 {errors.original_period && <p className="text-destructive text-xs mt-1">{errors.original_period.message as string}</p>}
               </div>
 
               <div className="space-y-2 lg:col-span-2">
                 <Label>Original Subject Assignment</Label>
-                <select disabled={isEditing} {...register('original_class_subject_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                <select disabled={isEditing} {...register('original_class_subject_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted">
                   <option value={0}>Select...</option>
                   {availableSubjects.map(cs => (
                     <option key={cs.id} value={cs.id}>{getSubjectDisplay(cs.id)}</option>
@@ -321,10 +321,10 @@ export default function DailyTimetableChanges() {
                     <TableCell className="text-muted-foreground">{change.reason || '-'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-3">
-                        <button onClick={() => editChange(change)} className="text-blue-600 hover:text-blue-900">
+                        <button onClick={() => editChange(change)} className="text-primary hover:text-primary">
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setDeleteId(change.id)} className="text-red-600 hover:text-red-900">
+                        <button onClick={() => setDeleteId(change.id)} className="text-destructive hover:text-red-900">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

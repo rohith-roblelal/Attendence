@@ -112,7 +112,7 @@ const fetchStudents = async () => {
                           <TableCell className="font-medium">{row.subject_name}</TableCell>
                           <TableCell className="text-center text-muted-foreground">{row.total_sessions}</TableCell>
                           <TableCell className="text-center text-green-600 font-medium">{row.present_sessions}</TableCell>
-                          <TableCell className="text-center text-red-600 font-medium">{row.absent_sessions}</TableCell>
+                          <TableCell className="text-center text-destructive font-medium">{row.absent_sessions}</TableCell>
                           <TableCell className="text-right">
                             <Badge variant={percentage >= 75 ? 'default' : 'destructive'} className={percentage >= 75 ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}>
                               {percentage.toFixed(1)}%

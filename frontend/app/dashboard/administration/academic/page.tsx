@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import ProtectedRoute from '../../../../components/ProtectedRoute';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AcademicYears from '../../../../components/academic/AcademicYears';
 import Departments from '../../../../components/academic/Departments';
 import Specializations from '../../../../components/academic/Specializations';
@@ -9,49 +8,30 @@ import AdmissionBatches from '../../../../components/academic/AdmissionBatches';
 import Semesters from '../../../../components/academic/Semesters';
 import Classes from '../../../../components/academic/Classes';
 
-const TABS = [
-  { id: 'academic-years', label: 'Academic Years', component: AcademicYears },
-  { id: 'departments', label: 'Departments', component: Departments },
-  { id: 'specializations', label: 'Specializations', component: Specializations },
-  { id: 'admission-batches', label: 'Admission Batches', component: AdmissionBatches },
-  { id: 'semesters', label: 'Semesters', component: Semesters },
-  { id: 'classes', label: 'Classes & Sections', component: Classes },
-];
-
 export default function AcademicStructurePage() {
-  const [activeTab, setActiveTab] = useState(TABS[0].id);
-
-  const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || AcademicYears;
-
   return (
-    <ProtectedRoute allowedRoles={['ADMINISTRATION']}>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Academic Structure</h1>
-        
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="mt-6">
-          <ActiveComponent />
-        </div>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Academic Structure</h1>
+        <p className="text-muted-foreground">Manage years, departments, specializations, batches, semesters and classes.</p>
       </div>
-    </ProtectedRoute>
+
+      <Tabs defaultValue="years">
+        <TabsList>
+          <TabsTrigger value="years">Academic Years</TabsTrigger>
+          <TabsTrigger value="departments">Departments</TabsTrigger>
+          <TabsTrigger value="specializations">Specializations</TabsTrigger>
+          <TabsTrigger value="batches">Admission Batches</TabsTrigger>
+          <TabsTrigger value="semesters">Semesters</TabsTrigger>
+          <TabsTrigger value="classes">Classes</TabsTrigger>
+        </TabsList>
+        <TabsContent value="years" className="mt-6"><AcademicYears /></TabsContent>
+        <TabsContent value="departments" className="mt-6"><Departments /></TabsContent>
+        <TabsContent value="specializations" className="mt-6"><Specializations /></TabsContent>
+        <TabsContent value="batches" className="mt-6"><AdmissionBatches /></TabsContent>
+        <TabsContent value="semesters" className="mt-6"><Semesters /></TabsContent>
+        <TabsContent value="classes" className="mt-6"><Classes /></TabsContent>
+      </Tabs>
+    </div>
   );
 }

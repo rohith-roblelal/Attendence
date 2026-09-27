@@ -1,49 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import ProtectedRoute from '../../../../components/ProtectedRoute';
-import Teachers from '../../../../components/people/Teachers';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Students from '../../../../components/people/Students';
-
-const TABS = [
-  { id: 'teachers', label: 'Teachers', component: Teachers },
-  { id: 'students', label: 'Students', component: Students },
-];
+import Teachers from '../../../../components/people/Teachers';
 
 export default function PeoplePage() {
-  const [activeTab, setActiveTab] = useState(TABS[0].id);
-
-  const ActiveComponent = TABS.find(t => t.id === activeTab)?.component || Teachers;
-
   return (
-    <ProtectedRoute allowedRoles={['ADMINISTRATION']}>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">People Management</h1>
-        
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
-                  ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="mt-6">
-          <ActiveComponent />
-        </div>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Students & Teachers</h1>
+        <p className="text-muted-foreground">Manage student and teacher profiles.</p>
       </div>
-    </ProtectedRoute>
+
+      <Tabs defaultValue="students">
+        <TabsList>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="teachers">Teachers</TabsTrigger>
+        </TabsList>
+        <TabsContent value="students" className="mt-6"><Students /></TabsContent>
+        <TabsContent value="teachers" className="mt-6"><Teachers /></TabsContent>
+      </Tabs>
+    </div>
   );
 }

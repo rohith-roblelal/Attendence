@@ -215,11 +215,11 @@ const fetchSubjects = async () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-3">
-                      <button onClick={() => editSubject(sub)} className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => editSubject(sub)} className="text-primary hover:text-primary">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       {sub.is_active ? (
-                        <button onClick={() => setDeactivateId(sub.id)} className="text-red-600 hover:text-red-900">
+                        <button onClick={() => setDeactivateId(sub.id)} className="text-destructive hover:text-red-900">
                           <UserX className="w-4 h-4" />
                         </button>
                       ) : (

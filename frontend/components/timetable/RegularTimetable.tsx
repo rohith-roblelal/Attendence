@@ -9,6 +9,8 @@ import { classesApi } from '../../lib/api/classes';
 import { classSubjectsApi } from '../../lib/api/class-subjects';
 import { subjectsApi } from '../../lib/api/subjects';
 import { teachersApi } from '../../lib/api/teachers';
+import { apiClient } from '../../lib/api/client';
+import { useAuth } from '../../lib/auth/AuthContext';
 import { Edit2, UserX } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,9 @@ const updateRegularSchema = z.object({
 });
 
 export default function RegularTimetable() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRATION';
+
   const [timetable, setTimetable] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [classSubjects, setClassSubjects] = useState<any[]>([]);
@@ -66,18 +71,43 @@ export default function RegularTimetable() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [ttRes, clsRes, csRes, subRes, tRes] = await Promise.all([
-        timetableApi.getRegular(),
-        classesApi.getClasses(),
-        classSubjectsApi.getAll(),
-        subjectsApi.getSubjects(),
-        teachersApi.getTeachers()
-      ]);
-      setTimetable(ttRes.data.data);
-      setClasses(clsRes.data.data);
-      setClassSubjects(csRes.data.data);
-      setSubjects(subRes.data.data);
-      setTeachers(tRes.data.data);
+      if (isAdmin) {
+        const [ttRes, clsRes, csRes, subRes, tRes] = await Promise.all([
+          timetableApi.getRegular(),
+          classesApi.getClasses(),
+          classSubjectsApi.getAll(),
+          subjectsApi.getSubjects(),
+          teachersApi.getTeachers()
+        ]);
+        setTimetable(ttRes.data.data);
+        setClasses(clsRes.data.data.filter((c: any) => c.status === 'ACTIVE'));
+        setClassSubjects(csRes.data.data);
+        setSubjects(subRes.data.data);
+        setTeachers(tRes.data.data);
+      } else {
+        const [ttRes, teacherRes, subRes, tRes] = await Promise.all([
+          apiClient.get('/dashboard/teacher/timetable'),
+          apiClient.get('/dashboard/teacher'),
+          subjectsApi.getSubjects(),
+          teachersApi.getTeachers()
+        ]);
+        
+        setTimetable(ttRes.data.data);
+        
+        const teacherData = teacherRes.data.data;
+        const mappedSubjects = (teacherData.assignments || []).map((a: any) => ({
+          id: a.class_subject_id || a.id,
+          class_id: a.class_id,
+          subject_id: a.subject_id,
+          teacher_id: a.teacher_id,
+          is_active: true
+        }));
+        
+        setClasses(teacherData.classes || []);
+        setClassSubjects(mappedSubjects);
+        setSubjects(subRes.data.data);
+        setTeachers(tRes.data.data);
+      }
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch data');
@@ -142,12 +172,14 @@ export default function RegularTimetable() {
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Get active class subjects for the selected class to populate dropdown
-  const availableSubjects = classSubjects.filter(cs => cs.class_id === selectedClassId && cs.is_active);
+  // For Admins, filter by selected class. For Teachers, show all their assigned subjects.
+  const availableSubjects = isAdmin 
+    ? classSubjects.filter(cs => cs.class_id === selectedClassId && cs.is_active)
+    : classSubjects.filter(cs => cs.is_active);
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
       <Card>
         <CardHeader>
@@ -158,7 +190,7 @@ export default function RegularTimetable() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>Class</Label>
-                <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted">
                   <option value={0}>Select...</option>
                   {classes.map(c => (
                     <option key={c.id} value={c.id}>{c.class_code || c.section_name}</option>
@@ -169,7 +201,7 @@ export default function RegularTimetable() {
 
               <div className="space-y-2">
                 <Label>Day</Label>
-                <select disabled={isEditing} {...register('day_of_week', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100">
+                <select disabled={isEditing} {...register('day_of_week', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted">
                   {days.map((day, idx) => (
                     <option key={idx + 1} value={idx + 1}>{day}</option>
                   ))}
@@ -179,13 +211,23 @@ export default function RegularTimetable() {
 
               <div className="space-y-2">
                 <Label>Period Number</Label>
-                <Input disabled={isEditing} type="number" min="1" {...register('period_number', { valueAsNumber: true })} className="disabled:bg-gray-100" />
+                <Input disabled={isEditing} type="number" min="1" {...register('period_number', { valueAsNumber: true })} className="disabled:bg-muted" />
                 {errors.period_number && <p className="text-destructive text-xs mt-1">{errors.period_number.message as string}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label>Subject Assignment</Label>
-                <select {...register('class_subject_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                <select {...register('class_subject_id', { 
+                  valueAsNumber: true,
+                  onChange: (e) => {
+                    const subjId = Number(e.target.value);
+                    const matchedSubj = classSubjects.find(cs => cs.id === subjId);
+                    if (matchedSubj && !isAdmin) {
+                      const currentValues = watch();
+                      reset({ ...currentValues, class_id: matchedSubj.class_id, class_subject_id: subjId });
+                    }
+                  }
+                })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                   <option value={0}>Select subject...</option>
                   {availableSubjects.map(cs => {
                     const sub = subjects.find(s => s.id === cs.subject_id);
@@ -263,11 +305,11 @@ export default function RegularTimetable() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-3">
-                        <button onClick={() => editEntry(entry)} className="text-blue-600 hover:text-blue-900">
+                        <button onClick={() => editEntry(entry)} className="text-primary hover:text-primary">
                           <Edit2 className="w-4 h-4" />
                         </button>
                         {entry.is_active ? (
-                          <button onClick={() => setDeactivateId(entry.id)} className="text-red-600 hover:text-red-900">
+                          <button onClick={() => setDeactivateId(entry.id)} className="text-destructive hover:text-red-900">
                             <UserX className="w-4 h-4" />
                           </button>
                         ) : (

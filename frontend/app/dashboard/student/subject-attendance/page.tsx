@@ -1,160 +1,156 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import ProtectedRoute from '../../../../components/ProtectedRoute';
-import { apiClient } from '../../../../lib/api/client';
-import { BookOpen, AlertCircle, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { apiClient } from "../../../../lib/api/client";
+import { BookOpen, PieChart, Clock } from 'lucide-react';
 
-interface SubjectRecord {
-  subject_id: number;
-  subject_name: string;
-  subject_code: string;
-  total_sessions: number;
-  present_sessions: number;
-  absent_sessions: number;
-}
-
-interface StatsResponse {
-  subjectAttendance: SubjectRecord[];
-  attendance: { required_percentage: number };
-}
-
-const REQUIRED = 75;
-
-export default function StudentSubjectAttendancePage() {
-  const [subjects, setSubjects] = useState<SubjectRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function MyAttendancePage() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await apiClient.get('/dashboard/student');
-      setSubjects(res.data.data.subjectAttendance || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to load attendance data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.get('/dashboard/student');
+        setData(response.data.data);
+      } catch (err: any) {
+        console.error("Failed to fetch attendance data", err);
+        setError(err.response?.data?.message || 'Failed to load attendance records.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  if (loading) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">My Attendance</h1>
+        <div className="h-96 bg-muted rounded-lg animate-pulse mt-6" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">My Attendance</h1>
+        <Card className="mt-6 border-red-200 bg-red-50 text-red-800">
+          <CardContent className="pt-6">{error || 'No data available.'}</CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const requiredPercentage = data.attendanceOverview?.required_percentage || 75;
 
   return (
-    <ProtectedRoute allowedRoles={['STUDENT']}>
-      <div className="space-y-6 max-w-4xl mx-auto pb-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Subject Attendance</h1>
-            <p className="text-muted-foreground mt-1">Your attendance breakdown per subject.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={isLoading} className="gap-2 shrink-0">
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">My Attendance</h1>
+        <p className="text-muted-foreground mt-2">Detailed breakdown of your subject-wise attendance and recent history.</p>
+      </div>
 
-        <Separator />
-
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
-          </div>
-        ) : error ? (
-          <Alert variant="destructive" className="max-w-xl mx-auto">
-            <AlertCircle className="h-5 w-5" />
-            <AlertTitle>Unable to load data</AlertTitle>
-            <AlertDescription className="mt-2 flex flex-col items-start gap-3">
-              <p>{error}</p>
-              <Button variant="outline" size="sm" onClick={fetchData}>Retry</Button>
-            </AlertDescription>
-          </Alert>
-        ) : subjects.length === 0 ? (
-          <Card className="border-border/50">
-            <CardContent className="p-12 text-center text-muted-foreground">
-              <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              No attendance records available yet.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4 animate-in fade-in duration-500">
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader className="pb-2 border-b border-border/50">
-                <CardTitle className="text-base">All Subjects</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mt-6">
+        <Card className="shadow-sm border border-border/50">
+          <CardHeader className="bg-muted/30 border-b pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Subject Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {data.subjectAttendance && data.subjectAttendance.length > 0 ? (
+              <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
+                    <TableRow className="bg-muted/10">
                       <TableHead>Subject</TableHead>
-                      <TableHead className="text-center">Conducted</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
                       <TableHead className="text-center">Present</TableHead>
                       <TableHead className="text-center">Absent</TableHead>
-                      <TableHead className="text-right">Attendance</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {subjects.map(s => {
-                      const pct = s.total_sessions > 0 ? (s.present_sessions / s.total_sessions) * 100 : 0;
-                      const isLow = pct < REQUIRED;
+                    {data.subjectAttendance.map((sub: any, idx: number) => {
+                      const pct = sub.total_sessions > 0 ? Math.round((sub.present_sessions / sub.total_sessions) * 100) : 0;
                       return (
-                        <TableRow key={s.subject_id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{s.subject_name}</p>
-                              <p className="text-xs text-muted-foreground font-mono">{s.subject_code}</p>
-                            </div>
+                        <TableRow key={idx} className="hover:bg-muted/5 transition-colors">
+                          <TableCell className="font-medium text-sm">
+                            {sub.subject_name}
+                            <div className="text-xs text-muted-foreground">{sub.subject_code}</div>
                           </TableCell>
-                          <TableCell className="text-center text-muted-foreground">{s.total_sessions}</TableCell>
-                          <TableCell className="text-center text-green-600 font-medium">{s.present_sessions}</TableCell>
-                          <TableCell className="text-center text-red-500 font-medium">{s.absent_sessions}</TableCell>
+                          <TableCell className="text-center">{sub.total_sessions}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">{sub.present_sessions}</TableCell>
+                          <TableCell className="text-center text-red-600 font-medium">{sub.absent_sessions}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex flex-col items-end gap-1">
-                              <span className={`font-semibold text-sm ${isLow ? 'text-red-600' : pct < 85 ? 'text-amber-600' : 'text-green-600'}`}>
-                                {s.total_sessions > 0 ? `${pct.toFixed(1)}%` : 'N/A'}
-                              </span>
-                              {s.total_sessions > 0 && (
-                                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full transition-all ${isLow ? 'bg-red-500' : pct < 85 ? 'bg-amber-500' : 'bg-green-500'}`}
-                                    style={{ width: `${Math.min(pct, 100)}%` }}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {s.total_sessions === 0 ? (
-                              <Badge variant="secondary">No Data</Badge>
-                            ) : isLow ? (
-                              <Badge variant="destructive" className="gap-1 text-xs">
-                                <AlertTriangle className="w-3 h-3" /> Low
-                              </Badge>
-                            ) : (
-                              <Badge variant="default" className="gap-1 text-xs bg-green-600 hover:bg-green-700">
-                                <CheckCircle2 className="w-3 h-3" /> Good
-                              </Badge>
-                            )}
+                            <Badge variant="outline" className={pct < requiredPercentage ? 'text-red-600 border-red-200 bg-red-50' : 'text-green-600 border-green-200 bg-green-50'}>
+                              {pct}%
+                            </Badge>
                           </TableCell>
                         </TableRow>
                       );
                     })}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">No subject data found.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm border border-border/50">
+          <CardHeader className="bg-muted/30 border-b pb-4">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Recent History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {data.recentAttendance && data.recentAttendance.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/10">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead className="text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.recentAttendance.map((rec: any, idx: number) => (
+                      <TableRow key={idx} className="hover:bg-muted/5 transition-colors">
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {new Date(rec.session_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="font-medium text-sm">{rec.subject_name}</TableCell>
+                        <TableCell>P{rec.period_number}</TableCell>
+                        <TableCell className="text-right">
+                          {rec.status === 'PRESENT' ? (
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none shadow-none">Present</Badge>
+                          ) : (
+                            <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-none shadow-none">Absent</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">No recent attendance records found.</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </ProtectedRoute>
+    </div>
   );
 }

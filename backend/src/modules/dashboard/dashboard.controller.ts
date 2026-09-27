@@ -78,7 +78,13 @@ export const getTutorStats = async (req: Request, res: Response, next: NextFunct
     }
     
     const stats = await repo.getTutorStats(classId);
-    res.json({ status: 'success', data: stats });
+    res.json({ 
+      status: 'success', 
+      data: {
+        ...stats,
+        classInfo: { id: classId }
+      } 
+    });
   } catch (error) {
     next(error);
   }
@@ -140,6 +146,34 @@ export const getTeacherSessions = async (req: Request, res: Response, next: Next
   }
 };
 
+
+export const getTutorStudentStatsById = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = await rbacRepo.getTeacherIdByUserId(req.user!.id);
+    if (!teacherId) return res.status(403).json({ status: 'error', message: 'Not a teacher' });
+
+    const [tutorRows] = await pool.query('SELECT class_id FROM tutor_assignments WHERE teacher_id = ? AND is_active = TRUE', [teacherId]);
+    const classId = (tutorRows as any[])[0]?.class_id;
+    if (!classId) return res.status(403).json({ status: 'error', message: 'Not assigned as a tutor' });
+
+    const studentId = parseInt(req.params.id, 10);
+    
+    // Ensure the student is actually in the tutor's assigned class
+    const [enrollment] = await pool.query(
+      'SELECT id FROM student_enrollments WHERE student_id = ? AND class_id = ? AND status = ?',
+      [studentId, classId, 'ACTIVE']
+    );
+    
+    if ((enrollment as any[]).length === 0) {
+      return res.status(403).json({ status: 'error', message: 'Student is not assigned to your class' });
+    }
+
+    const stats = await repo.getStudentStats(studentId);
+    res.json({ status: 'success', data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getStudentStats = async (req: Request, res: Response, next: NextFunction) => {
   try {

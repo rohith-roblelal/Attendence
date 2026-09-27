@@ -186,11 +186,11 @@ const fetchBaseData = async () => {
     return sub?.name || 'Unknown';
   };
 
-  if (loadingData) return <div className="p-4 text-gray-500">Loading foundational data...</div>;
+  if (loadingData) return <div className="p-4 text-muted-foreground">Loading foundational data...</div>;
 
   return (
     <div className="space-y-6">
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded">{error}</div>}
+      {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       {success && <div className="bg-green-50 text-green-700 p-3 rounded">{success}</div>}
       
       <Card>
@@ -214,7 +214,7 @@ const fetchBaseData = async () => {
                 value={selectedSessionId} 
                 onChange={handleSessionChange} 
                 disabled={!selectedClassId}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-100"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted"
               >
                 <option value={0}>Select Session...</option>
                 {availableSessions.sort((a,b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime()).map(s => (
@@ -294,7 +294,7 @@ const fetchBaseData = async () => {
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input 
                               type="checkbox"
-                              className="w-5 h-5 cursor-pointer accent-green-600 rounded"
+                              className="w-5 h-5 cursor-pointer accent-green-600 rounded bg-background text-foreground"
                               checked={currentMark === 'PRESENT'}
                               onChange={(e) => {
                                 setAttendanceMarks(prev => ({ 
