@@ -9,11 +9,12 @@ import { academicApi } from '../../lib/api/academic';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Specializations from './Specializations';
 
 const departmentSchema = z.object({
   code: z.string().min(1, 'Code is required').max(20),
@@ -79,7 +80,7 @@ const fetchDepartments = async () => {
       code: dept.code,
       name: dept.name,
       description: dept.description,
-      is_active: dept.status === 'ACTIVE',
+      is_active: !!dept.is_active,
     });
   };
 
@@ -119,7 +120,7 @@ const fetchDepartments = async () => {
               </div>
 
               <div className="flex items-center space-x-2 pt-4">
-                <Checkbox id="dept_is_active" {...register('is_active')} />
+                <input type="checkbox" id="dept_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
                 <Label htmlFor="dept_is_active">Active</Label>
               </div>
             </div>
@@ -159,11 +160,22 @@ const fetchDepartments = async () => {
                   <TableCell className="font-medium">{dept.code}</TableCell>
                   <TableCell>{dept.name}</TableCell>
                   <TableCell>
-                    <Badge variant={dept.status === 'ACTIVE' ? "default" : "destructive"}>
-                      {dept.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                    <Badge variant={dept.is_active ? "default" : "destructive"}>
+                      {dept.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
+                    <Dialog>
+                      <DialogTrigger className="cursor-pointer text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2 rounded-md inline-flex items-center justify-center">
+                        Specializations
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>{dept.name} - Specializations</DialogTitle>
+                        </DialogHeader>
+                        <Specializations departmentId={dept.id} />
+                      </DialogContent>
+                    </Dialog>
                     <Button variant="link" onClick={() => editDept(dept)}>Edit</Button>
                   </TableCell>
                 </TableRow>

@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const admissionBatchSchema = z.object({
   academic_year_id: z.number().int().positive('Academic Year is required'),
   department_id: z.number().int().positive('Department is required'),
-  specialization_id: z.number().int().positive().nullable().optional(),
+  specialization_id: z.number().int().min(0).nullable().optional(),
   batch_name: z.string().min(1, 'Name is required').max(50),
   admission_year: z.number().int().min(2000).max(2100),
 });

@@ -45,6 +45,7 @@ export default function UserManagementPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>('ALL');
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<any>({
     resolver: zodResolver(isEditing ? updateUserSchema : createUserSchema),
@@ -128,7 +129,25 @@ export default function UserManagementPage() {
   return (
     <ProtectedRoute allowedRoles={['ADMINISTRATION']}>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="roleFilter" className="whitespace-nowrap">Filter by Role:</Label>
+            <select
+              id="roleFilter"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="flex h-9 w-[180px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="ALL">All Roles</option>
+              <option value="ADMINISTRATION">ADMINISTRATION</option>
+              <option value="HOD">HOD</option>
+              <option value="TUTOR">TUTOR</option>
+              <option value="TEACHER">TEACHER</option>
+              <option value="STUDENT">STUDENT</option>
+            </select>
+          </div>
+        </div>
 
         {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
 
@@ -179,7 +198,7 @@ export default function UserManagementPage() {
 
                 {isEditing && (
                   <div className="flex items-center space-x-2 pt-8">
-                    <Checkbox id="user_is_active" {...register('is_active')} />
+                    <input type="checkbox" id="user_is_active" {...register('is_active')} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                     <Label htmlFor="user_is_active">Account Active</Label>
                   </div>
                 )}
@@ -216,7 +235,9 @@ export default function UserManagementPage() {
               ) : users.length === 0 ? (
                 <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No users found.</TableCell></TableRow>
               ) : (
-                users.map(user => (
+                users
+                  .filter(user => roleFilter === 'ALL' || user.role === roleFilter)
+                  .map(user => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>

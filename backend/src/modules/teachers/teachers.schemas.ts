@@ -9,6 +9,7 @@ export const idParamSchema = z.object({
 export const createTeacherSchema = z.object({
   body: z.object({
     user_id: z.number().int().positive(),
+    department_id: z.number().int().positive().nullable().optional(),
     teacher_id: z.string().min(1).max(30),
     first_name: z.string().min(1).max(100),
     last_name: z.string().max(100).nullable().optional(),
@@ -20,6 +21,7 @@ export const createTeacherSchema = z.object({
 
 export const updateTeacherSchema = z.object({
   body: z.object({
+    department_id: z.number().int().positive().nullable().optional(),
     teacher_id: z.string().min(1).max(30).optional(),
     first_name: z.string().min(1).max(100).optional(),
     last_name: z.string().max(100).nullable().optional(),

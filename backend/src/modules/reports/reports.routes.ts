@@ -17,4 +17,6 @@ router.get('/subjects/:id/attendance', authorize('ADMINISTRATION', 'HOD', 'TEACH
 
 router.get('/department/:id/attendance', authorize('ADMINISTRATION', 'HOD'), authorizeScope('DEPARTMENT'), ctrl.getDepartmentAttendanceReport);
 
+router.get('/hod/department', authorize('HOD'), ctrl.getHodReport);
+
 export default router;

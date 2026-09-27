@@ -238,14 +238,14 @@ const fetchBaseData = async () => {
             <div className="flex gap-2">
               <Button 
                 variant="outline"
-                className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200"
+                className="bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200 cursor-pointer shadow-sm transition-all hover:shadow"
                 onClick={() => markAll('PRESENT')}
               >
                 Mark Unmarked as Present
               </Button>
               <Button 
                 variant="outline"
-                className="bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 border-red-200"
+                className="bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 border-red-200 cursor-pointer shadow-sm transition-all hover:shadow"
                 onClick={() => markAll('ABSENT')}
               >
                 Mark Unmarked as Absent
@@ -290,21 +290,23 @@ const fetchBaseData = async () => {
                         )}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex justify-center gap-4">
-                          <button 
-                            onClick={() => markStudent(student.id, 'PRESENT')}
-                            className={`p-2 rounded-full border transition-colors ${currentMark === 'PRESENT' ? 'bg-green-600 text-white border-green-600' : 'text-muted-foreground border-input hover:bg-accent'}`}
-                            title="Present"
-                          >
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => markStudent(student.id, 'ABSENT')}
-                            className={`p-2 rounded-full border transition-colors ${currentMark === 'ABSENT' ? 'bg-red-600 text-white border-red-600' : 'text-muted-foreground border-input hover:bg-accent'}`}
-                            title="Absent"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                        <div className="flex justify-center items-center gap-3">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input 
+                              type="checkbox"
+                              className="w-5 h-5 cursor-pointer accent-green-600 rounded"
+                              checked={currentMark === 'PRESENT'}
+                              onChange={(e) => {
+                                setAttendanceMarks(prev => ({ 
+                                  ...prev, 
+                                  [student.id]: e.target.checked ? 'PRESENT' : 'ABSENT' 
+                                }));
+                              }}
+                            />
+                            <span className={`text-sm font-medium select-none ${currentMark === 'PRESENT' ? 'text-green-700' : 'text-muted-foreground'}`}>
+                              {currentMark === 'PRESENT' ? 'Present' : 'Absent'}
+                            </span>
+                          </label>
                         </div>
                       </TableCell>
                     </TableRow>

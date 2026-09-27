@@ -9,7 +9,6 @@ import { academicApi } from '../../lib/api/academic';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +24,7 @@ const specializationSchema = z.object({
 
 type SpecializationFormData = z.infer<typeof specializationSchema>;
 
-export default function Specializations() {
+export default function Specializations({ departmentId }: { departmentId?: number }) {
   const [specializations, setSpecializations] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +35,7 @@ export default function Specializations() {
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<SpecializationFormData>({
     resolver: zodResolver(specializationSchema),
-    defaultValues: { is_active: true }
+    defaultValues: { is_active: true, department_id: departmentId || 0 }
   });
 
 const fetchData = async () => {
@@ -46,7 +45,12 @@ const fetchData = async () => {
         academicApi.getSpecializations(),
         academicApi.getDepartments()
       ]);
-      setSpecializations(specRes.data.data);
+      
+      let fetchedSpecs = specRes.data.data;
+      if (departmentId) {
+        fetchedSpecs = fetchedSpecs.filter((s: any) => s.department_id === departmentId);
+      }
+      setSpecializations(fetchedSpecs);
       setDepartments(deptRes.data.data);
       setError(null);
     } catch (err: any) {
@@ -93,7 +97,7 @@ const fetchData = async () => {
   const cancelEdit = () => {
     setIsEditing(false);
     setCurrentId(null);
-    reset({ department_id: 0, code: '', name: '', description: '', is_active: true });
+    reset({ department_id: departmentId || 0, code: '', name: '', description: '', is_active: true });
     setError(null);
   };
 
@@ -137,7 +141,7 @@ const fetchData = async () => {
               </div>
 
               <div className="flex items-center space-x-2 pt-4">
-                <Checkbox id="spec_is_active" {...register('is_active')} />
+                <input type="checkbox" id="spec_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
                 <Label htmlFor="spec_is_active">Active</Label>
               </div>
             </div>

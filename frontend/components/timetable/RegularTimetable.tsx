@@ -18,7 +18,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const createRegularSchema = z.object({
   class_id: z.number().int().positive('Class is required'),
@@ -203,7 +202,7 @@ export default function RegularTimetable() {
 
               {isEditing && (
                 <div className="flex items-center space-x-2 pt-8">
-                  <Checkbox id="tt_is_active" {...register('is_active')} />
+                  <input type="checkbox" id="tt_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
                   <Label htmlFor="tt_is_active">Active</Label>
                 </div>
               )}

@@ -10,7 +10,6 @@ import { academicApi } from '../../lib/api/academic';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,7 +150,7 @@ const fetchData = async () => {
               </div>
 
               <div className="flex items-center space-x-2 pt-4">
-                <Checkbox id="class_is_active" {...register('is_active')} />
+                <input type="checkbox" id="class_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
                 <Label htmlFor="class_is_active">Active</Label>
               </div>
             </div>

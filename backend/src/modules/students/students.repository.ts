@@ -2,9 +2,10 @@ import { pool } from '../../db/pool';
 
 export const getStudents = async (filters: any) => {
   let query = `
-    SELECT s.*, u.username, u.email 
+    SELECT s.*, u.username, u.email, se.class_id as current_class_id
     FROM students s
     JOIN users u ON s.user_id = u.id
+    LEFT JOIN student_enrollments se ON se.student_id = s.id AND se.status = 'ACTIVE'
     WHERE 1=1
   `;
   const values: any[] = [];
@@ -41,7 +42,7 @@ export const createStudent = async (data: any) => {
     const [res] = await connection.query(
       `INSERT INTO students (user_id, student_id, first_name, last_name, date_of_birth, admission_number, joined_at, status, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [data.user_id, data.student_id, data.first_name, data.last_name || null, data.date_of_birth || null, data.admission_number || null, data.joined_at || null, data.status]
+      [data.user_id, data.student_id, data.first_name, data.last_name || null, data.date_of_birth || null, data.admission_number || null, data.joined_at || null, data.status || 'ACTIVE']
     );
     const newStudentId = (res as any).insertId;
 

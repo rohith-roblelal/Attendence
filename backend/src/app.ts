@@ -23,6 +23,7 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import reportsRoutes from './modules/reports/reports.routes';
 
 export const app = express();
+app.set('etag', false); // Disable ETag to prevent 304 Not Modified CORS issues
 
 // Security Middlewares
 app.use(helmet());

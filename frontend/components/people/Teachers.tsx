@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { teachersApi } from '../../lib/api/teachers';
 import { usersApi } from '../../lib/api/users';
+import { academicApi } from '../../lib/api/academic';
 import { Edit2, UserX } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const createTeacherSchema = z.object({
   user_id: z.number().int().positive('User is required'),
+  department_id: z.number().int().positive('Department is required').optional().or(z.literal(0)),
   teacher_id: z.string().min(1, 'Teacher ID is required').max(30),
   first_name: z.string().min(1, 'First name is required').max(100),
   last_name: z.string().max(100).optional().or(z.literal('')),
@@ -26,6 +28,7 @@ const createTeacherSchema = z.object({
 });
 
 const updateTeacherSchema = z.object({
+  department_id: z.number().int().positive().optional().or(z.literal(0)),
   teacher_id: z.string().min(1).max(30).optional(),
   first_name: z.string().min(1).max(100).optional(),
   last_name: z.string().max(100).optional().or(z.literal('')),
@@ -37,6 +40,7 @@ const updateTeacherSchema = z.object({
 export default function Teachers() {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,11 +56,13 @@ export default function Teachers() {
 const fetchData = async () => {
     setLoading(true);
     try {
-      const [teachRes, usersRes] = await Promise.all([
+      const [teachRes, usersRes, deptRes] = await Promise.all([
         teachersApi.getTeachers(),
-        usersApi.getUsers()
+        usersApi.getUsers(),
+        academicApi.getDepartments()
       ]);
       setTeachers(teachRes.data.data);
+      setDepartments(deptRes.data.data);
       // Only keep users that are TEACHER or HOD to link a profile, and not already linked
       const allUsers = usersRes.data.data.users || [];
       const teacherUserIds = teachRes.data.data.map((t: any) => t.user_id);
@@ -84,6 +90,7 @@ const fetchData = async () => {
       if (!payload.joined_at) delete payload.joined_at;
       if (!payload.last_name) payload.last_name = null;
       if (!payload.designation) payload.designation = null;
+      if (!payload.department_id || payload.department_id === 0) payload.department_id = null;
 
       if (isEditing && currentId) {
         await teachersApi.updateTeacher(currentId, payload);
@@ -103,6 +110,7 @@ const fetchData = async () => {
     setIsEditing(true);
     setCurrentId(teacher.id);
     reset({
+      department_id: teacher.department_id || 0,
       teacher_id: teacher.teacher_id,
       first_name: teacher.first_name,
       last_name: teacher.last_name || '',
@@ -115,7 +123,7 @@ const fetchData = async () => {
   const cancelEdit = () => {
     setIsEditing(false);
     setCurrentId(null);
-    reset({ user_id: 0, teacher_id: '', first_name: '', last_name: '', designation: '', joined_at: '' });
+    reset({ user_id: 0, department_id: 0, teacher_id: '', first_name: '', last_name: '', designation: '', joined_at: '' });
     setError(null);
   };
 
@@ -155,6 +163,17 @@ const fetchData = async () => {
                   {errors.user_id && <p className="text-destructive text-xs mt-1">{errors.user_id.message as string}</p>}
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label>Department</Label>
+                <select {...register('department_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value={0}>No Department...</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+                {errors.department_id && <p className="text-destructive text-xs mt-1">{errors.department_id.message as string}</p>}
+              </div>
 
               <div className="space-y-2">
                 <Label>Teacher ID / Staff Code</Label>
@@ -219,6 +238,7 @@ const fetchData = async () => {
             <TableRow>
               <TableHead>ID / Code</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Designation</TableHead>
               <TableHead>Join Date</TableHead>
               <TableHead>Status</TableHead>
@@ -235,6 +255,7 @@ const fetchData = async () => {
                 <TableRow key={teacher.id}>
                   <TableCell className="font-medium">{teacher.teacher_id}</TableCell>
                   <TableCell>{teacher.first_name} {teacher.last_name}</TableCell>
+                  <TableCell className="text-muted-foreground">{departments.find(d => d.id === teacher.department_id)?.name || '-'}</TableCell>
                   <TableCell className="text-muted-foreground">{teacher.designation || '-'}</TableCell>
                   <TableCell className="text-muted-foreground">{teacher.joined_at?.split('T')[0] || '-'}</TableCell>
                   <TableCell>

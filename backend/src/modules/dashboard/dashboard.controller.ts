@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as repo from './dashboard.repository';
 import * as rbacRepo from '../rbac/rbac.repository';
+import { pool } from '../../db/pool';
 
 export const getAdministrationStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,21 +18,48 @@ export const getHodStats = async (req: Request, res: Response, next: NextFunctio
     if (!teacherId) {
       return res.status(403).json({ status: 'error', message: 'Not a teacher' });
     }
-    // A teacher might be HOD of multiple departments, but the rules assume one primarily,
-    // let's just fetch the department they are HOD of.
-    // For this simple implementation, we'll get their assigned department from their teacher record
-    const [teacherRows] = await rbacRepo.pool.query('SELECT department_id FROM teachers WHERE id = ?', [teacherId]);
-    const departmentId = (teacherRows as any[])[0]?.department_id;
-    if (!departmentId) {
-      return res.status(403).json({ status: 'error', message: 'No department assigned' });
+
+    // Resolve Active HOD Assignment -> Assigned Department -> Assigned Academic Year
+    // Checks is_active AND strict date lifecycle boundaries (start_date <= today <= end_date)
+    const [hodRows] = await pool.query(
+      'SELECT department_id, academic_year_id FROM department_hod_assignments WHERE teacher_id = ? AND is_active = TRUE AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE()) LIMIT 1',
+      [teacherId]
+    );
+    const assignment = (hodRows as any[])[0];
+
+    if (!assignment) {
+      return res.status(403).json({ status: 'error', message: 'No active HOD assignment found' });
     }
-    const isHod = await rbacRepo.isHodOfDepartment(teacherId, departmentId);
-    if (!isHod) {
-      return res.status(403).json({ status: 'error', message: 'Not HOD of this department' });
-    }
+
+    const { department_id: departmentId, academic_year_id: assignedAcademicYearId } = assignment;
+    const academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
     
-    const stats = await repo.getHodStats(departmentId);
+    // Fetch dashboard stats scoped by securely resolved department and selected academic year
+    const stats = await repo.getHodStats(departmentId, academicYearId);
     res.json({ status: 'success', data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getHodPeople = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = await rbacRepo.getTeacherIdByUserId(req.user!.id);
+    if (!teacherId) return res.status(403).json({ status: 'error', message: 'Not a teacher' });
+
+    const [hodRows] = await pool.query(
+      'SELECT department_id, academic_year_id FROM department_hod_assignments WHERE teacher_id = ? AND is_active = TRUE AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE()) LIMIT 1',
+      [teacherId]
+    );
+    const assignment = (hodRows as any[])[0];
+    if (!assignment) return res.status(403).json({ status: 'error', message: 'No active HOD assignment found' });
+
+    const { department_id: departmentId, academic_year_id: assignedAcademicYearId } = assignment;
+    const academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+
+    const data = await repo.getHodTeachersByClass(departmentId, academicYearId);
+    const [allAcademicYears] = await pool.query('SELECT id, name FROM academic_years ORDER BY id DESC');
+    res.json({ status: 'success', data: { ...data, academic_years: allAcademicYears } });
   } catch (error) {
     next(error);
   }
@@ -43,7 +71,7 @@ export const getTutorStats = async (req: Request, res: Response, next: NextFunct
     if (!teacherId) {
       return res.status(403).json({ status: 'error', message: 'Not a teacher' });
     }
-    const [tutorRows] = await rbacRepo.pool.query('SELECT class_id FROM tutor_assignments WHERE teacher_id = ? AND status = "ACTIVE"', [teacherId]);
+    const [tutorRows] = await pool.query('SELECT class_id FROM tutor_assignments WHERE teacher_id = ? AND is_active = TRUE', [teacherId]);
     const classId = (tutorRows as any[])[0]?.class_id;
     if (!classId) {
       return res.status(403).json({ status: 'error', message: 'Not assigned as a tutor' });
@@ -51,6 +79,25 @@ export const getTutorStats = async (req: Request, res: Response, next: NextFunct
     
     const stats = await repo.getTutorStats(classId);
     res.json({ status: 'success', data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTutorStudents = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = await rbacRepo.getTeacherIdByUserId(req.user!.id);
+    if (!teacherId) {
+      return res.status(403).json({ status: 'error', message: 'Not a teacher' });
+    }
+    const [tutorRows] = await pool.query('SELECT class_id FROM tutor_assignments WHERE teacher_id = ? AND is_active = TRUE', [teacherId]);
+    const classId = (tutorRows as any[])[0]?.class_id;
+    if (!classId) {
+      return res.status(403).json({ status: 'error', message: 'Not assigned as a tutor' });
+    }
+    
+    const data = await repo.getTutorStudents(classId);
+    res.json({ status: 'success', data });
   } catch (error) {
     next(error);
   }
@@ -69,15 +116,61 @@ export const getTeacherStats = async (req: Request, res: Response, next: NextFun
   }
 };
 
+export const getTeacherTimetable = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = await rbacRepo.getTeacherIdByUserId(req.user!.id);
+    if (!teacherId) return res.status(403).json({ status: 'error', message: 'Not a teacher' });
+    
+    const data = await repo.getTeacherTimetable(teacherId);
+    res.json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeacherSessions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const teacherId = await rbacRepo.getTeacherIdByUserId(req.user!.id);
+    if (!teacherId) return res.status(403).json({ status: 'error', message: 'Not a teacher' });
+    
+    const data = await repo.getTeacherSessions(teacherId);
+    res.json({ status: 'success', data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 export const getStudentStats = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const [studentRows] = await rbacRepo.pool.query('SELECT id FROM students WHERE user_id = ?', [req.user!.id]);
+    const [studentRows] = await pool.query('SELECT id FROM students WHERE user_id = ?', [req.user!.id]);
     const studentId = (studentRows as any[])[0]?.id;
     if (!studentId) {
       return res.status(403).json({ status: 'error', message: 'Not a student' });
     }
     const stats = await repo.getStudentStats(studentId);
     res.json({ status: 'success', data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStudentTimetable = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const [studentRows] = await pool.query('SELECT id FROM students WHERE user_id = ?', [req.user!.id]);
+    const studentId = (studentRows as any[])[0]?.id;
+    if (!studentId) return res.status(403).json({ status: 'error', message: 'Not a student' });
+
+    // Get the student's active enrolled class
+    const [enrollmentRows] = await pool.query(
+      'SELECT class_id FROM student_enrollments WHERE student_id = ? AND status = ? ORDER BY start_date DESC LIMIT 1',
+      [studentId, 'ACTIVE']
+    );
+    const classId = (enrollmentRows as any[])[0]?.class_id;
+    if (!classId) return res.status(404).json({ status: 'error', message: 'No active class enrollment found' });
+
+    const timetable = await repo.getStudentTimetable(classId);
+    res.json({ status: 'success', data: timetable });
   } catch (error) {
     next(error);
   }
