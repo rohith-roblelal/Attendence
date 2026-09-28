@@ -1,23 +1,41 @@
 import { pool } from '../../db/pool';
 
+// Helper to normalize SQL string aggregates to numbers
+const normalizeNumerics = <T extends Record<string, any>>(rows: T[]): T[] => {
+  return rows.map(row => {
+    const normalized = { ...row };
+    const numericFields = [
+      'total_sessions', 'present_sessions', 'absent_sessions', 
+      'percentage', 'student_count', 'total_records', 'present_records'
+    ];
+    
+    for (const field of numericFields) {
+      if (normalized[field] !== undefined && normalized[field] !== null) {
+        normalized[field as keyof T] = Number(normalized[field]) as any;
+      }
+    }
+    return normalized;
+  });
+};
+
 export const getStudentAttendanceReport = async (studentId: number) => {
   const [report] = await pool.query(`
     SELECT 
-      c.id as class_id, c.name as class_name,
+      c.id as class_id, c.class_code as class_name,
       sub.id as subject_id, sub.name as subject_name,
       COUNT(a.id) as total_sessions,
       SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions,
       SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) as absent_sessions
-    FROM attendance a
+    FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     JOIN class_subjects csj ON cs.class_subject_id = csj.id
     JOIN subjects sub ON csj.subject_id = sub.id
     JOIN classes c ON cs.class_id = c.id
     WHERE a.student_id = ? AND cs.status = 'CONDUCTED'
-    GROUP BY c.id, c.name, sub.id, sub.name
+    GROUP BY c.id, c.class_code, sub.id, sub.name
   `, [studentId]);
 
-  return report as any[];
+  return normalizeNumerics(report as any[]);
 };
 
 export const getClassAttendanceReport = async (classId: number) => {
@@ -37,7 +55,7 @@ export const getClassAttendanceReport = async (classId: number) => {
     ORDER BY s.id ASC
   `, [classId, classId]);
 
-  return report as any[];
+  return normalizeNumerics(report as any[]);
 };
 
 export const getSubjectAttendanceReport = async (subjectId: number) => {
@@ -56,13 +74,13 @@ export const getSubjectAttendanceReport = async (subjectId: number) => {
     ORDER BY s.id ASC
   `, [subjectId]);
 
-  return report as any[];
+  return normalizeNumerics(report as any[]);
 };
 
 export const getDepartmentAttendanceReport = async (departmentId: number) => {
   const [report] = await pool.query(`
     SELECT 
-      c.id as class_id, c.id as class_name,
+      c.id as class_id, c.class_code as class_name,
       COUNT(DISTINCT s.id) as student_count,
       COUNT(a.id) as total_records,
       SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records,
@@ -70,12 +88,12 @@ export const getDepartmentAttendanceReport = async (departmentId: number) => {
     FROM classes c
     LEFT JOIN students s ON s.status = 'ACTIVE'
     LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
-    LEFT JOIN attendance a ON a.class_session_id = cs.id AND a.student_id = s.id
+    LEFT JOIN attendance_records a ON a.class_session_id = cs.id AND a.student_id = s.id
     WHERE c.is_active = TRUE
     GROUP BY c.id
   `, []);
 
-  return report as any[];
+  return normalizeNumerics(report as any[]);
 };
 
 export const getHodDepartmentReport = async (departmentId: number, academicYearId: number) => {
@@ -120,7 +138,7 @@ export const getHodDepartmentReport = async (departmentId: number, academicYearI
   `, [departmentId, academicYearId]);
 
   return {
-    classSummary: classSummary as any[],
-    studentSummary: studentSummary as any[]
+    classSummary: normalizeNumerics(classSummary as any[]),
+    studentSummary: normalizeNumerics(studentSummary as any[])
   };
 };

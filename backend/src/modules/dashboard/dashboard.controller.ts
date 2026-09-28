@@ -156,7 +156,7 @@ export const getTutorStudentStatsById = async (req: Request, res: Response, next
     const classId = (tutorRows as any[])[0]?.class_id;
     if (!classId) return res.status(403).json({ status: 'error', message: 'Not assigned as a tutor' });
 
-    const studentId = parseInt(req.params.id, 10);
+    const studentId = parseInt(req.params.id as string, 10);
     
     // Ensure the student is actually in the tutor's assigned class
     const [enrollment] = await pool.query(

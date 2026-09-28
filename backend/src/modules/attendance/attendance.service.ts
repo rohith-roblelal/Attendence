@@ -23,6 +23,10 @@ export const create = async (data: any, userId: number) => {
     if (!session) throw { status: 404, message: 'Session not found' };
     if (session.status === 'CANCELLED') throw { status: 409, message: 'Cannot record attendance for a cancelled session' };
 
+    // IDOR Check: Ensure the user mutating this session is actually the assigned teacher
+    const isAuthorized = await repo.isTeacherAuthorizedForSession(conn, userId, data.class_session_id);
+    if (!isAuthorized) throw { status: 403, message: 'Forbidden: You are not authorized to record attendance for this class session.' };
+
     const enrollment = await repo.getActiveStudentEnrollment(conn, data.student_id, session.class_id, session.session_date);
     if (!enrollment) throw { status: 409, message: 'Student not enrolled in the class for the session date' };
 
@@ -45,6 +49,10 @@ export const update = async (id: number, data: any, userId: number) => {
     await conn.beginTransaction();
     const existing = await repo.getById(id);
     if (!existing) throw { status: 404, message: 'Attendance record not found' };
+
+    // IDOR Check: Ensure the user mutating this session is actually the assigned teacher
+    const isAuthorized = await repo.isTeacherAuthorizedForSession(conn, userId, existing.class_session_id);
+    if (!isAuthorized) throw { status: 403, message: 'Forbidden: You are not authorized to modify attendance for this class session.' };
 
     if (existing.status !== data.status) {
       await repo.updateAttendance(conn, id, data.status, userId);
@@ -83,6 +91,10 @@ export const createBulk = async (data: any, userId: number) => {
     if (uniqueStudentIds.size !== studentIds.length) {
       throw { status: 422, message: 'Duplicate student IDs found in bulk request' };
     }
+
+    // IDOR Check: Ensure the user mutating this session is actually the assigned teacher for the subject/class
+    const isAuthorized = await repo.isTeacherAuthorizedForSession(conn, userId, data.class_session_id);
+    if (!isAuthorized) throw { status: 403, message: 'Forbidden: You are not authorized to record attendance for this class session.' };
 
     for (const record of data.records) {
       const enrollment = await repo.getActiveStudentEnrollment(conn, record.student_id, session.class_id, session.session_date);

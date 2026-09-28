@@ -15,12 +15,14 @@ export default function ReportsPage() {
       </div>
 
       <Tabs defaultValue="class">
-        <TabsList>
-          <TabsTrigger value="class">By Class</TabsTrigger>
-          <TabsTrigger value="student">By Student</TabsTrigger>
-          <TabsTrigger value="subject">By Subject</TabsTrigger>
-          <TabsTrigger value="department">By Department</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:pb-0">
+          <TabsList className="inline-flex min-w-max md:w-auto h-auto">
+            <TabsTrigger value="class" className="px-4 py-2">By Class</TabsTrigger>
+            <TabsTrigger value="student" className="px-4 py-2">By Student</TabsTrigger>
+            <TabsTrigger value="subject" className="px-4 py-2">By Subject</TabsTrigger>
+            <TabsTrigger value="department" className="px-4 py-2">By Department</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="class" className="mt-6"><ClassAttendanceReport /></TabsContent>
         <TabsContent value="student" className="mt-6"><StudentAttendanceReport /></TabsContent>
         <TabsContent value="subject" className="mt-6"><SubjectAttendanceReport /></TabsContent>

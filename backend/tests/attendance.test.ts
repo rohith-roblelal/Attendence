@@ -10,6 +10,19 @@ vi.mock('../src/modules/rbac/rbac.service', () => ({
   getSessionByAttendanceId: vi.fn().mockResolvedValue({ id: 1, class_id: 1, class_subject_id: 1, conducted_by_teacher_id: 1 })
 }));
 
+vi.mock('../src/modules/attendance/attendance.repository', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    getSessionInfo: vi.fn(),
+    getActiveStudentEnrollment: vi.fn(),
+    createAttendance: vi.fn(),
+    getById: vi.fn(),
+    updateAttendance: vi.fn(),
+    isTeacherAuthorizedForSession: vi.fn().mockResolvedValue(true)
+  };
+});
+
 vi.mock('../src/db/pool', () => {
   return { 
     pool: { 

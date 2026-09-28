@@ -4,12 +4,16 @@ import { app } from '../src/app';
 import * as repo from '../src/modules/dashboard/dashboard.repository';
 import * as rbacRepo from '../src/modules/rbac/rbac.repository';
 import * as authUtils from '../src/modules/auth/auth.utils';
+import { pool } from '../src/db/pool';
 
 vi.mock('../src/modules/dashboard/dashboard.repository');
 vi.mock('../src/modules/rbac/rbac.repository', async (importOriginal) => {
   const actual = await importOriginal();
-  return { ...actual, getTeacherIdByUserId: vi.fn(), isHodOfDepartment: vi.fn(), pool: { query: vi.fn() } };
+  return { ...actual, getTeacherIdByUserId: vi.fn(), isHodOfDepartment: vi.fn() };
 });
+vi.mock('../src/db/pool', () => ({
+  pool: { query: vi.fn() }
+}));
 
 describe('Dashboard Module', () => {
   let adminToken: string, hodToken: string, tutorToken: string, teacherToken: string, studentToken: string;
@@ -39,8 +43,7 @@ describe('Dashboard Module', () => {
 
   it('GET /hod returns stats for assigned HOD', async () => {
     vi.spyOn(rbacRepo, 'getTeacherIdByUserId').mockResolvedValue(10);
-    // @ts-ignore
-    vi.spyOn(rbacRepo.pool, 'query').mockResolvedValue([[{ department_id: 1 }]]);
+    vi.spyOn(pool, 'query').mockResolvedValue([[{ department_id: 1 }]] as any);
     vi.spyOn(rbacRepo, 'isHodOfDepartment').mockResolvedValue(true);
     vi.spyOn(repo, 'getHodStats').mockResolvedValue({ counts: {}, attendanceOverview: {} });
     const res = await request(app).get('/api/v1/dashboard/hod').set('Cookie', [`token=${hodToken}`]);
@@ -49,8 +52,7 @@ describe('Dashboard Module', () => {
 
   it('GET /tutor returns stats for assigned tutor', async () => {
     vi.spyOn(rbacRepo, 'getTeacherIdByUserId').mockResolvedValue(10);
-    // @ts-ignore
-    vi.spyOn(rbacRepo.pool, 'query').mockResolvedValue([[{ class_id: 1 }]]);
+    vi.spyOn(pool, 'query').mockResolvedValue([[{ class_id: 1 }]] as any);
     vi.spyOn(repo, 'getTutorStats').mockResolvedValue({ counts: {}, attendanceOverview: {}, recentSessions: [] });
     const res = await request(app).get('/api/v1/dashboard/tutor').set('Cookie', [`token=${tutorToken}`]);
     expect(res.status).toBe(200);
@@ -64,8 +66,7 @@ describe('Dashboard Module', () => {
   });
 
   it('GET /student returns stats for student', async () => {
-    // @ts-ignore
-    vi.spyOn(rbacRepo.pool, 'query').mockResolvedValue([[{ id: 100 }]]);
+    vi.spyOn(pool, 'query').mockResolvedValue([[{ id: 100 }]] as any);
     vi.spyOn(repo, 'getStudentStats').mockResolvedValue({ attendance: {} as any, recentAttendance: [] });
     const res = await request(app).get('/api/v1/dashboard/student').set('Cookie', [`token=${studentToken}`]);
     expect(res.status).toBe(200);

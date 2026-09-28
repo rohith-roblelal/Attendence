@@ -17,7 +17,7 @@ export const authorizeScope = (scopeType: 'DEPARTMENT' | 'CLASS' | 'SUBJECT' | '
         if (departmentId) hasAccess = await rbacService.canManageDepartment(user, departmentId);
       } 
       else if (scopeType === 'TIMETABLE') {
-        let classId = Number(req.body.class_id) || Number(req.query.class_id);
+        let classId: number | null = Number(req.body.class_id) || Number(req.query.class_id);
         const recordId = Number(req.params.id);
         if (!classId && recordId) {
           // If the route has /daily-changes in it, use daily change id, else regular timetable id

@@ -23,10 +23,8 @@ export const isTutorOfClass = async (teacherId: number, classId: number): Promis
 
 export const getDepartmentOfClass = async (classId: number): Promise<number | null> => {
   const [rows] = await pool.query(
-    `SELECT d.id FROM classes c 
-     JOIN semesters s ON c.semester_id = s.id 
-     JOIN admission_batches b ON s.batch_id = b.id 
-     JOIN specializations sp ON b.specialization_id = sp.id 
+    `SELECT b.department_id as id FROM classes c 
+     JOIN admission_batches b ON c.admission_batch_id = b.id 
      WHERE c.id = ?`,
     [classId]
   );

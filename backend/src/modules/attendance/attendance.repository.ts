@@ -88,3 +88,15 @@ export const getStudentAttendanceSummary = async (studentId: number) => {
   const [rows] = await pool.query(query, [studentId, studentId]);
   return rows;
 };
+export const isTeacherAuthorizedForSession = async (conn: Connection, userId: number, sessionId: number) => {
+  const [userRows] = await conn.query(
+    'SELECT u.id, r.name as role FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?',
+    [userId]
+  );
+  const user = (userRows as any[])[0];
+  if (!user) return false;
+  
+  // Delegate to the centralized RBAC service which handles HOD/Tutor scoping correctly
+  const rbacService = require('../rbac/rbac.service');
+  return await rbacService.canManageSession(user, sessionId);
+};

@@ -5,6 +5,7 @@ import * as repo from '../src/modules/reports/reports.repository';
 import * as rbacService from '../src/modules/rbac/rbac.service';
 import * as rbacRepo from '../src/modules/rbac/rbac.repository';
 import * as authUtils from '../src/modules/auth/auth.utils';
+import { pool } from '../src/db/pool';
 
 vi.mock('../src/modules/reports/reports.repository');
 vi.mock('../src/modules/rbac/rbac.service', () => ({
@@ -35,8 +36,7 @@ describe('Reports Module', () => {
   });
 
   it('GET /students/:id/attendance allows student to view their own', async () => {
-    // @ts-ignore
-    vi.spyOn(rbacRepo.pool, 'query').mockResolvedValue([[{ id: 10 }]]);
+    vi.spyOn(pool, 'query').mockResolvedValue([[{ id: 10 }]] as any);
     vi.spyOn(repo, 'getStudentAttendanceReport').mockResolvedValue([]);
     const res = await request(app).get('/api/v1/reports/students/10/attendance').set('Cookie', [`token=${studentToken}`]);
     expect(res.status).toBe(200);

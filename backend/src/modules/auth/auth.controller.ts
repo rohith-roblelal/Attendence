@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from './auth.service';
+import { env } from '../../config/env';
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -9,7 +10,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Set HttpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000, // 1 hour
     });
@@ -31,7 +32,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     // but for this simple JWT implementation we'll decode and issue a new one.
     // In production, consider a separate refresh token stored in DB.
     const jwt = require('jsonwebtoken');
-    const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
+    const JWT_SECRET = env.JWT_SECRET;
     
     let payload;
     try {
@@ -45,7 +46,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
     res.cookie('token', newToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000,
     });
