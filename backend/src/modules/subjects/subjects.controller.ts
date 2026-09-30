@@ -29,9 +29,9 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
   } catch (err) { next(err); }
 };
 
-export const deactivate = async (req: Request, res: Response, next: NextFunction) => {
+export const remove = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deactivate(Number(req.params.id));
+    await service.remove(Number(req.params.id));
     res.status(204).send();
   } catch (err) { next(err); }
 };

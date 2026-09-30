@@ -96,6 +96,17 @@ const fetchData = async () => {
     setError(null);
   };
 
+  const deleteSem = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this semester?')) return;
+    setError(null);
+    try {
+      await academicApi.deleteSemester(id);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete semester');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
@@ -188,6 +199,7 @@ const fetchData = async () => {
                     <TableCell>{sem.end_date?.split('T')[0]}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="link" onClick={() => editSem(sem)}>Edit</Button>
+                      <Button variant="link" className="text-destructive" onClick={() => deleteSem(sem.id)}>Delete</Button>
                     </TableCell>
                   </TableRow>
                 );

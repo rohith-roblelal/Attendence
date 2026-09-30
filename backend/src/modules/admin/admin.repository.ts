@@ -94,6 +94,65 @@ export const updateUser = async (id: number, data: UpdateUserDTO, passwordHash?:
   await pool.query(query, values);
 };
 
-export const deactivateUser = async (id: number): Promise<void> => {
-  await pool.query('UPDATE users SET is_active = FALSE, updated_at = NOW() WHERE id = ?', [id]);
+export const deleteUser = async (id: number): Promise<void> => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    // Get student ID if exists
+    const [studentRows] = await connection.query('SELECT id FROM students WHERE user_id = ?', [id]);
+    const student = (studentRows as any[])[0];
+    if (student) {
+      await connection.query('DELETE FROM attendance_records WHERE student_id = ?', [student.id]);
+      await connection.query('DELETE FROM student_enrollments WHERE student_id = ?', [student.id]);
+      await connection.query('DELETE FROM students WHERE id = ?', [student.id]);
+    }
+
+    // Get teacher ID if exists
+    const [teacherRows] = await connection.query('SELECT id FROM teachers WHERE user_id = ?', [id]);
+    const teacher = (teacherRows as any[])[0];
+    if (teacher) {
+      // Get all class_subject IDs for this teacher
+      const [classSubjectsRows] = await connection.query('SELECT id FROM class_subjects WHERE teacher_id = ?', [teacher.id]);
+      const classSubjectIds = (classSubjectsRows as any[]).map((r: any) => r.id);
+      
+      // Delete attendance records for sessions involving this teacher
+      await connection.query(`
+        DELETE FROM attendance_records 
+        WHERE class_session_id IN (
+          SELECT id FROM class_sessions 
+          WHERE conducted_by_teacher_id = ? 
+             OR assigned_teacher_id = ? 
+             ${classSubjectIds.length > 0 ? 'OR class_subject_id IN (?)' : ''}
+        )
+      `, classSubjectIds.length > 0 ? [teacher.id, teacher.id, classSubjectIds] : [teacher.id, teacher.id]);
+
+      // Delete class sessions involving this teacher
+      await connection.query(`
+        DELETE FROM class_sessions 
+        WHERE conducted_by_teacher_id = ? 
+           OR assigned_teacher_id = ?
+           ${classSubjectIds.length > 0 ? 'OR class_subject_id IN (?)' : ''}
+      `, classSubjectIds.length > 0 ? [teacher.id, teacher.id, classSubjectIds] : [teacher.id, teacher.id]);
+
+      // Delete timetable entries
+      if (classSubjectIds.length > 0) {
+        await connection.query('DELETE FROM regular_timetable_entries WHERE class_subject_id IN (?)', [classSubjectIds]);
+      }
+
+      await connection.query('DELETE FROM department_hod_assignments WHERE teacher_id = ?', [teacher.id]);
+      await connection.query('DELETE FROM tutor_assignments WHERE teacher_id = ?', [teacher.id]);
+      await connection.query('DELETE FROM class_subjects WHERE teacher_id = ?', [teacher.id]);
+      await connection.query('DELETE FROM teachers WHERE id = ?', [teacher.id]);
+    }
+
+    await connection.query('DELETE FROM users WHERE id = ?', [id]);
+    
+    await connection.commit();
+  } catch (err) {
+    await connection.rollback();
+    throw err;
+  } finally {
+    connection.release();
+  }
 };

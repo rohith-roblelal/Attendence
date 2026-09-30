@@ -15,6 +15,6 @@ router.post('/users', validateRequest(createUserSchema), adminController.createU
 router.get('/users', adminController.getAllUsers);
 router.get('/users/:id', validateRequest(userIdParamSchema), adminController.getUserById);
 router.patch('/users/:id', validateRequest(userIdParamSchema), validateRequest(updateUserSchema), adminController.updateUser);
-router.delete('/users/:id', validateRequest(userIdParamSchema), adminController.deactivateUser);
+router.delete('/users/:id', validateRequest(userIdParamSchema), adminController.deleteUser);
 
 export default router;

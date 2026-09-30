@@ -41,11 +41,11 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-export const deactivateUser = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = Number(req.params.id);
-    await adminService.deactivateUser(userId);
-    logger.info({ action: 'DEACTIVATE_USER', userId, adminId: (req as any).user.id }, 'Admin deactivated user');
+    await adminService.deleteUser(userId);
+    logger.info({ action: 'DELETE_USER', userId, adminId: (req as any).user.id }, 'Admin deleted user');
     res.status(204).send();
   } catch (error) {
     next(error);

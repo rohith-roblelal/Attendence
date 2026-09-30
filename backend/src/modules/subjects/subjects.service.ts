@@ -30,10 +30,10 @@ export const update = async (id: number, data: any) => {
   } catch (err) { handleError(err); }
 };
 
-export const deactivate = async (id: number) => {
+export const remove = async (id: number) => {
   const existing = await repo.getById(id);
   if (!existing) throw { status: 404, message: 'Subject not found' };
   try {
-    await repo.deactivateSubject(id);
+    await repo.deleteSubject(id);
   } catch (err) { handleError(err); }
 };

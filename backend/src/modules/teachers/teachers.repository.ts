@@ -30,9 +30,9 @@ export const getTeacherById = async (id: number) => {
 
 export const createTeacher = async (data: any) => {
   const [res] = await pool.query(
-    `INSERT INTO teachers (user_id, department_id, teacher_id, first_name, last_name, designation, joined_at, status, created_at, updated_at) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-    [data.user_id, data.department_id || null, data.teacher_id, data.first_name, data.last_name || null, data.designation || null, data.joined_at || null, data.status || 'ACTIVE']
+    `INSERT INTO teachers (user_id, teacher_id, first_name, last_name, designation, joined_at, status, created_at, updated_at) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    [data.user_id, data.teacher_id, data.first_name, data.last_name || null, data.designation || null, data.joined_at || null, data.status || 'ACTIVE']
   );
   return (res as any).insertId;
 };
@@ -40,7 +40,7 @@ export const createTeacher = async (data: any) => {
 export const updateTeacher = async (id: number, data: any) => {
   const updates: string[] = [];
   const values: any[] = [];
-  ['department_id', 'teacher_id', 'first_name', 'last_name', 'designation', 'joined_at', 'status'].forEach(key => {
+  ['teacher_id', 'first_name', 'last_name', 'designation', 'joined_at', 'status'].forEach(key => {
     if (data[key] !== undefined) {
       updates.push(`${key} = ?`);
       values.push(data[key]);

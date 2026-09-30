@@ -5,6 +5,7 @@ import { env } from '../../config/env';
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password } = req.body;
+    console.log('LOGIN ATTEMPT:', { username, passwordLength: password?.length });
     const { user, token } = await authService.login(username, password);
 
     // Set HttpOnly cookie

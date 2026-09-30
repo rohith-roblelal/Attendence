@@ -69,10 +69,10 @@ export const updateUser = async (id: number, data: UpdateUserDTO): Promise<UserR
   return (await adminRepo.getUserById(id))!;
 };
 
-export const deactivateUser = async (id: number): Promise<void> => {
+export const deleteUser = async (id: number): Promise<void> => {
   const user = await adminRepo.getUserById(id);
   if (!user) {
     throw { status: 404, message: 'User not found' };
   }
-  await adminRepo.deactivateUser(id);
+  await adminRepo.deleteUser(id);
 };

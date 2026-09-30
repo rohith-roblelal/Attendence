@@ -22,13 +22,15 @@ export const seedDatabase = async () => {
     await conn.query('TRUNCATE TABLE roles');
 
     // 0. Roles
-    await conn.query(`INSERT INTO roles (id, name, description) VALUES 
-      (1, 'ADMINISTRATION', 'Admin role'),
-      (2, 'TEACHER', 'Teacher role'),
-      (3, 'STUDENT', 'Student role')`);
+    await conn.query(`INSERT INTO roles (id, name, description, created_at) VALUES 
+      (1, 'ADMINISTRATION', 'Admin role', NOW()),
+      (2, 'TEACHER', 'Teacher role', NOW()),
+      (3, 'STUDENT', 'Student role', NOW())`);
 
     // 1. Department
-    await conn.query(`INSERT INTO departments (id, name, code, is_active) VALUES (1, 'Computer Science', 'CS', 1)`);
+    await conn.query(`INSERT INTO departments (id, name, code, is_active, created_at, updated_at) VALUES (1, 'Computer Science', 'CS', 1, NOW(), NOW())`);
+
+
     
     // 2. Users (Admin, Teacher A, Teacher B, Student A)
     // role_id: 1=ADMIN, 2=TEACHER, 3=STUDENT
@@ -39,9 +41,10 @@ export const seedDatabase = async () => {
       (4, 'student_a', 'hash', 3, 1, NOW(), NOW())`);
 
     // 3. Teachers
-    await conn.query(`INSERT INTO teachers (id, user_id, department_id, teacher_id, first_name, last_name, status, created_at, updated_at) VALUES 
-      (1, 2, 1, 'T001', 'Teacher', 'A', 'ACTIVE', NOW(), NOW()),
-      (2, 3, 1, 'T002', 'Teacher', 'B', 'ACTIVE', NOW(), NOW())`);
+    await conn.query(`INSERT INTO teachers (id, user_id, teacher_id, first_name, last_name, status, created_at, updated_at) VALUES 
+      (1, 2, 'T001', 'Teacher', 'A', 'ACTIVE', NOW(), NOW()),
+      (2, 3, 'T002', 'Teacher', 'B', 'ACTIVE', NOW(), NOW())`);
+
 
     // 4. Academic Structure
     await conn.query(`INSERT INTO academic_years (id, name, start_date, end_date, is_active, created_at, updated_at) VALUES (1, '2026-2027', '2026-01-01', '2027-01-01', 1, NOW(), NOW())`);

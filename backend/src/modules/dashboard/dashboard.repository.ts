@@ -3,28 +3,71 @@ import { pool } from '../../db/pool';
 export const getAdministrationStats = async () => {
   const [counts] = await pool.query(`
     SELECT
-      (SELECT COUNT(*) FROM academic_years) as academic_years,
+      (SELECT name FROM academic_years WHERE is_active = TRUE LIMIT 1) as academic_year,
       (SELECT COUNT(*) FROM departments) as departments,
       (SELECT COUNT(*) FROM classes WHERE is_active = TRUE) as active_classes,
       (SELECT COUNT(*) FROM students WHERE status = 'ACTIVE') as active_students,
       (SELECT COUNT(*) FROM teachers WHERE status = 'ACTIVE') as active_teachers,
       (SELECT COUNT(*) FROM department_hod_assignments WHERE is_active = TRUE) as active_hods,
-      (SELECT COUNT(*) FROM tutor_assignments WHERE is_active = TRUE) as active_tutors
+      (SELECT COUNT(*) FROM tutor_assignments WHERE is_active = TRUE) as active_tutors,
+      (SELECT COUNT(*) FROM users WHERE role_id = (SELECT id FROM roles WHERE name = 'ADMINISTRATION')) as admins,
+      (SELECT COUNT(*) FROM users WHERE is_active = FALSE) as inactive_users
   `);
   
-  // Example for overall attendance, omitting cancelled sessions
   const [attendance] = await pool.query(`
     SELECT 
-      COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COUNT(a.id) as total_overall,
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_overall,
+      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() THEN 1 ELSE 0 END), 0) as total_today,
+      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_today,
+      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'ABSENT' THEN 1 ELSE 0 END), 0) as absent_today
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     WHERE cs.status = 'CONDUCTED'
   `);
 
+  const [atRisk] = await pool.query(`
+    SELECT COUNT(*) as at_risk_count FROM (
+      SELECT student_id 
+      FROM attendance_records a
+      JOIN class_sessions cs ON a.class_session_id = cs.id
+      WHERE cs.status = 'CONDUCTED'
+      GROUP BY student_id
+      HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
+    ) sub
+  `);
+
+  const [missedAttendance] = await pool.query(`
+    SELECT COUNT(c.id) as missed_classes
+    FROM classes c
+    WHERE c.is_active = TRUE 
+    AND c.id NOT IN (
+      SELECT DISTINCT class_id FROM class_sessions WHERE session_date = CURDATE() AND status = 'CONDUCTED'
+    )
+  `);
+
+  const attRow = (attendance as any[])[0];
+  const totalOverall = Number(attRow.total_overall);
+  const presentOverall = Number(attRow.present_overall);
+  const totalToday = Number(attRow.total_today);
+  const presentToday = Number(attRow.present_today);
+  const absentToday = Number(attRow.absent_today);
+
   return {
-    counts: (counts as any[])[0],
-    attendanceOverview: (attendance as any[])[0]
+    academic_year: (counts as any[])[0].academic_year || 'N/A',
+    departments: (counts as any[])[0].departments,
+    active_classes: (counts as any[])[0].active_classes,
+    active_students: (counts as any[])[0].active_students,
+    active_teachers: (counts as any[])[0].active_teachers,
+    active_hods: (counts as any[])[0].active_hods,
+    active_tutors: (counts as any[])[0].active_tutors,
+    admins: (counts as any[])[0].admins,
+    inactive_users: (counts as any[])[0].inactive_users,
+    overall_attendance: totalOverall > 0 ? `${Math.round((presentOverall / totalOverall) * 100)}%` : '0%',
+    todays_attendance: totalToday > 0 ? `${Math.round((presentToday / totalToday) * 100)}%` : 'N/A',
+    absent_today: absentToday,
+    students_at_risk: (atRisk as any[])[0].at_risk_count,
+    classes_missing_attendance_today: (missedAttendance as any[])[0].missed_classes
   };
 };
 
@@ -46,7 +89,7 @@ export const getHodStats = async (departmentId: number, academicYearId: number) 
   const [attendance] = await pool.query(`
     SELECT 
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     JOIN classes c ON cs.class_id = c.id
@@ -60,7 +103,7 @@ export const getHodStats = async (departmentId: number, academicYearId: number) 
       c.id, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as name,
       (SELECT COUNT(*) FROM student_enrollments se WHERE se.class_id = c.id AND se.status = 'ACTIVE') as student_count,
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM classes c
     JOIN semesters s ON c.semester_id = s.id
     JOIN admission_batches b ON c.admission_batch_id = b.id
@@ -75,7 +118,7 @@ export const getHodStats = async (departmentId: number, academicYearId: number) 
     SELECT 
       st.id, st.first_name, st.last_name, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as class_name,
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM students st
     JOIN student_enrollments se ON st.id = se.student_id AND se.status = 'ACTIVE'
     JOIN classes c ON se.class_id = c.id
@@ -153,7 +196,7 @@ export const getTutorStats = async (classId: number) => {
   const [attendance] = await pool.query(`
     SELECT 
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     WHERE cs.status = 'CONDUCTED' AND cs.class_id = ?
@@ -181,7 +224,7 @@ export const getTutorStudents = async (classId: number) => {
       s.student_id as admission_number,
       CONCAT(s.first_name, ' ', COALESCE(s.last_name, '')) as student_name,
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM students s
     JOIN student_enrollments se ON se.student_id = s.id AND se.status = 'ACTIVE'
     LEFT JOIN class_sessions cs ON cs.class_id = ? AND cs.status = 'CONDUCTED'
@@ -221,7 +264,7 @@ export const getTeacherStats = async (teacherId: number) => {
   const [attendance] = await pool.query(`
     SELECT 
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     WHERE cs.status = 'CONDUCTED' AND cs.conducted_by_teacher_id = ?
@@ -304,7 +347,7 @@ export const getStudentStats = async (studentId: number) => {
   const [attendance] = await pool.query(`
     SELECT 
       COUNT(a.id) as total_records,
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records
+      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     WHERE cs.status = 'CONDUCTED' AND a.student_id = ?

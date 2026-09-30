@@ -5,5 +5,5 @@ export const subjectsApi = {
   getSubjectById: (id: number) => apiClient.get(`/subjects/${id}`),
   createSubject: (data: unknown) => apiClient.post('/subjects', data),
   updateSubject: (id: number, data: unknown) => apiClient.patch(`/subjects/${id}`, data),
-  deactivateSubject: (id: number) => apiClient.delete(`/subjects/${id}`),
+  deleteSubject: (id: number) => apiClient.delete(`/subjects/${id}`),
 };

@@ -106,6 +106,17 @@ const fetchData = async () => {
     setError(null);
   };
 
+  const deleteBatch = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this admission batch?')) return;
+    setError(null);
+    try {
+      await academicApi.deleteAdmissionBatch(id);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete admission batch');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
@@ -205,6 +216,7 @@ const fetchData = async () => {
                     <TableCell className="text-muted-foreground">{spec ? spec.code : '-'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="link" onClick={() => editBatch(batch)}>Edit</Button>
+                      <Button variant="link" className="text-destructive" onClick={() => deleteBatch(batch.id)}>Delete</Button>
                     </TableCell>
                   </TableRow>
                 );

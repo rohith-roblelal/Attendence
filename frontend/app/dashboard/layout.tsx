@@ -68,14 +68,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading dashboard...</div>;
-  }
-
-  if (!user) {
-    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Redirecting to login...</div>;
-  }
-
   const { visibleNavItems, sortedGroups, groupedNavItems } = React.useMemo(() => {
     const visible = navItems.filter((item) => item.roles.includes(user?.role || ''));
     const grouped = visible.reduce((acc, item) => {
@@ -96,6 +88,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return { visibleNavItems: visible, sortedGroups: sorted, groupedNavItems: grouped };
   }, [user?.role]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Loading dashboard...</div>;
+  }
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center bg-background text-foreground">Redirecting to login...</div>;
+  }
+
 
   const SidebarContent = () => (
     <>

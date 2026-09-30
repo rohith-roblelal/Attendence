@@ -93,6 +93,12 @@
 - ✅ **React Performance:** Wrapped heavy role-based Sidebar navigation computations in `useMemo` hooks.
 - ✅ **Mobile Responsive UI:** Resolved a critical bug where navigation disappeared on mobile screens by implementing a fully responsive Hamburger Menu & sliding Navigation Drawer in `dashboard/layout.tsx`.
 
+### Phase 21: Post-Deployment Fixes & Maintenance
+- ✅ Revamped Administration Dashboard KPIs to show accurate, actionable insights (Students below 75% attendance threshold, Missing Attendance classes).
+- ✅ Cleaned up miscellaneous standalone scripts into organized `scripts/` and `old_scripts/` directories to maintain codebase hygiene.
+- ✅ Implemented complete hard-delete workflows (Frontend UI + Backend API + SQL) for Academic structure entities: Admission Batches, Semesters, and Subjects.
+- ✅ Identified and resolved a database schema mismatch during Teacher Profile creation (gracefully handling deprecated `department_id` mappings).
+
 ## Current State
 **Status:** Production Ready & Deployed 🚀
 **Pending Action Items:** Monitor production metrics, onboard initial university staff, and execute final smoke tests on Vercel deployment.
