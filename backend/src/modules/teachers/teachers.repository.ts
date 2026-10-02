@@ -18,7 +18,7 @@ export const getTeachers = async (filters: any) => {
     values.push(filters.user_id);
   }
   
-  query += ' ORDER BY t.first_name ASC';
+  query += ' ORDER BY CAST(t.teacher_id AS UNSIGNED) ASC, t.teacher_id ASC';
   const [rows] = await pool.query(query, values);
   return rows;
 };

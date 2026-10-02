@@ -79,11 +79,12 @@ const fetchBaseData = async () => {
     setSuccess(null);
     try {
       const [stuRes, attRes] = await Promise.all([
-        studentsApi.getStudents(),
+        // Pass class_id so backend only returns students enrolled in this class
+        studentsApi.getStudents({ class_id: classId, status: 'ACTIVE' }),
         attendanceApi.getAll({ class_session_id: sessionId })
       ]);
       
-      const classStudents = stuRes.data.data.filter((s: any) => s.current_class_id === classId && s.is_active);
+      const classStudents = stuRes.data.data;
       setStudents(classStudents);
       
       const attData = attRes.data.data.filter((a: any) => a.class_session_id === sessionId);

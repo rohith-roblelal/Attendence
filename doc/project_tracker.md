@@ -99,6 +99,27 @@
 - ✅ Implemented complete hard-delete workflows (Frontend UI + Backend API + SQL) for Academic structure entities: Admission Batches, Semesters, and Subjects.
 - ✅ Identified and resolved a database schema mismatch during Teacher Profile creation (gracefully handling deprecated `department_id` mappings).
 
+
+### Phase 22: Feature Additions, Data Integration & Bug Fixes
+- ✅ **Teacher Swap System:** Built a dedicated Period Swap feature allowing `TEACHER`, `HOD`, and `TUTOR` roles to request, approve, and reject period swaps with each other. Includes a dedicated `swaps` page and inline swap request cards on the Teacher Dashboard.
+- ✅ **Real Data on Dashboards:** Replaced all placeholder/static data on Teacher, Tutor, and Administration dashboards with live database queries. All KPI cards, tables, and lists now reflect real-time data.
+  - Teacher Dashboard: Shows assigned classes (Batch/Semester/Section) and subject assignments in a tabbed interface.
+  - Tutor Dashboard: Shows class students and subject-wise attendance details.
+  - Administration Dashboard: Shows at-risk students (<75% attendance) and classes with missing attendance for today.
+- ✅ **Applied Science Department:** Added "Applied Science" as a department in the production database so it appears in the teacher profile creation form dropdown.
+- ✅ **Missing Roles in Database:** Inserted `HOD` and `TUTOR` roles into the `roles` table in the production database, resolving `"Invalid role: TUTOR"` / `"Invalid role: HOD"` errors thrown when updating teacher user profiles.
+- ✅ **Attendance Enrollment Bug Fixed:** Resolved `"Student X not enrolled in the class for the session date"` error in the Attendance Tracker:
+  - Added `class_id` filter support to `GET /students` backend endpoint (`students.repository.ts`).
+  - Updated `studentsApi.getStudents()` frontend helper to accept optional query params.
+  - Fixed `AttendanceTracker.tsx` to fetch only students enrolled in the selected class (via `class_id` param) instead of fetching all students and doing an unreliable JS-side filter using a non-existent `current_class_id` field.
+- ✅ **XAMPP MySQL Conflict Documented:** Confirmed that the project uses Aiven Cloud MySQL and is unaffected by local XAMPP MySQL crashes.
+
 ## Current State
 **Status:** Production Ready & Deployed 🚀
-**Pending Action Items:** Monitor production metrics, onboard initial university staff, and execute final smoke tests on Vercel deployment.
+**Last Updated:** 2026-10-02
+**Pending Action Items:**
+- Implement "Applied Science" as a full department with associated specializations if needed.
+- Investigate and fix "Invalid role: TUTOR / HOD" errors on the teacher profile *update* form (frontend-side role field validation).
+- Test session deletion from the Teacher "My Sessions" page.
+- Verify timetable display for classes added via the timetable UI.
+- Implement tutor dashboard view of assigned class students and their per-subject attendance.

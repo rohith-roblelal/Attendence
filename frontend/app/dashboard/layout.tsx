@@ -3,7 +3,7 @@
 import { useAuth } from '../../lib/auth/AuthContext';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Home, Users, BookOpen, Calendar, Clock, BarChart3, Settings, Layers, UserCheck, Shield, GraduationCap, Menu } from 'lucide-react';
+import { LogOut, Home, Users, BookOpen, Calendar, Clock, BarChart3, Settings, Layers, UserCheck, Shield, GraduationCap, Menu, ArrowLeftRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useMemo } from 'react';
 
@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
   { name: 'Take Attendance', href: '/dashboard/teacher/take-attendance', icon: UserCheck, roles: ['TEACHER', 'TUTOR', 'HOD'], group: 'TEACHING' },
   { name: 'My Sessions', href: '/dashboard/teacher/sessions', icon: Clock, roles: ['TEACHER', 'TUTOR', 'HOD'], group: 'TEACHING' },
   { name: 'Timetable', href: '/dashboard/teacher/timetable', icon: Calendar, roles: ['TEACHER', 'TUTOR', 'HOD'], group: 'TEACHING' },
+  { name: 'Swap Requests', href: '/dashboard/teacher/swaps', icon: ArrowLeftRight, roles: ['TEACHER', 'TUTOR', 'HOD'], group: 'TEACHING' },
   { name: 'Dashboard', href: '/dashboard/student', icon: Home, roles: ['STUDENT'], group: 'MAIN' },
   { name: 'My Attendance', href: '/dashboard/student/subject-attendance', icon: BookOpen, roles: ['STUDENT'], group: 'ACADEMICS' },
   { name: 'My Timetable', href: '/dashboard/student/timetable', icon: Calendar, roles: ['STUDENT'], group: 'ACADEMICS' },

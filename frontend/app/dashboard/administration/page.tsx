@@ -2,8 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "../../../lib/api/client";
 import Link from "next/link";
+import { AlertCircle, CalendarX2 } from 'lucide-react';
 
 export default function AdministrationPage() {
   const [data, setData] = useState<any>(null);
@@ -13,24 +17,7 @@ export default function AdministrationPage() {
     const fetchData = async () => {
       try {
         const response = await apiClient.get('/dashboard/administration');
-        
-        // Flatten the nested data object to extract all individual metrics
-        const flattenObj = (ob: any) => {
-          let result: any = {};
-          for (const i in ob) {
-            if (typeof ob[i] === 'object' && ob[i] !== null && !Array.isArray(ob[i])) {
-              const temp = flattenObj(ob[i]);
-              for (const j in temp) {
-                result[j] = temp[j];
-              }
-            } else {
-              result[i] = ob[i];
-            }
-          }
-          return result;
-        };
-        
-        setData(flattenObj(response.data.data));
+        setData(response.data.data);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
@@ -47,12 +34,10 @@ export default function AdministrationPage() {
       .trim();
   };
 
-  return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight capitalize">administration Dashboard</h1>
-      <p className="text-muted-foreground">Here is your live overview of key metrics.</p>
-      
-      {loading ? (
+  if (loading) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-6">
           {[1,2,3,4,5,6].map(i => (
             <Card key={i}>
@@ -61,27 +46,136 @@ export default function AdministrationPage() {
             </Card>
           ))}
         </div>
-      ) : data ? (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-6">
-          {Object.entries(data).map(([key, value]) => {
-            if (Array.isArray(value)) return null; // Skip lists for KPI grid
-            return (
-              <Card key={key} className="overflow-hidden hover:bg-muted/10 transition-colors">
-                <CardHeader className="pb-2">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                    {formatKey(key)}
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{String(value)}</div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
+      </div>
+    );
+  }
+
+  if (!data || !data.kpis) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
         <Card className="mt-6"><CardContent className="pt-6">No data available.</CardContent></Card>
-      )}
+      </div>
+    );
+  }
+
+  const { kpis, lists } = data;
+  const atRiskStudents = lists?.at_risk_students || [];
+  const missedClasses = lists?.missed_classes || [];
+
+  return (
+    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
+      <p className="text-muted-foreground">Here is your live overview of key metrics fetched directly from the database.</p>
+      
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-6">
+        {Object.entries(kpis).map(([key, value]) => {
+          return (
+            <Card key={key} className="overflow-hidden hover:bg-muted/10 transition-colors">
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  {formatKey(key)}
+                </h3>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{String(value)}</div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="pt-8">
+        <Tabs defaultValue="at_risk" className="w-full">
+          <TabsList className="grid w-full md:w-auto grid-cols-2">
+            <TabsTrigger value="at_risk" className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              At-Risk Students ({atRiskStudents.length})
+            </TabsTrigger>
+            <TabsTrigger value="missed_classes" className="flex items-center gap-2">
+              <CalendarX2 className="h-4 w-4 text-orange-500" />
+              Missing Attendance Today ({missedClasses.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="at_risk" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Students with &lt; 75% Attendance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {atRiskStudents.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No students are currently at risk.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Admission No</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Total Sessions</TableHead>
+                        <TableHead>Present</TableHead>
+                        <TableHead>Attendance %</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {atRiskStudents.map((student: any) => {
+                        const sTotal = Number(student.total_sessions) || 0;
+                        const sPresent = Number(student.present_sessions) || 0;
+                        const sPerc = sTotal > 0 ? Math.round((sPresent / sTotal) * 100) : 0;
+                        return (
+                          <TableRow key={student.admission_number}>
+                            <TableCell className="font-medium">{student.admission_number}</TableCell>
+                            <TableCell>{student.student_name}</TableCell>
+                            <TableCell>{sTotal}</TableCell>
+                            <TableCell>{sPresent}</TableCell>
+                            <TableCell>
+                              <Badge variant="destructive">
+                                {sPerc}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="missed_classes" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Classes with Missing Attendance Today</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {missedClasses.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">All active classes have submitted attendance today!</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Batch</TableHead>
+                        <TableHead>Semester</TableHead>
+                        <TableHead>Section</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {missedClasses.map((c: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{c.batch_name}</TableCell>
+                          <TableCell>{c.semester_name}</TableCell>
+                          <TableCell>{c.class_code || c.section_name}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <div className="pt-8">
         <h2 className="text-2xl font-bold tracking-tight mb-4">Admin Modules</h2>

@@ -80,7 +80,7 @@ export default function RegularTimetable() {
           teachersApi.getTeachers()
         ]);
         setTimetable(ttRes.data.data);
-        setClasses(clsRes.data.data.filter((c: any) => c.status === 'ACTIVE'));
+        setClasses(clsRes.data.data.filter((c: any) => c.is_active));
         setClassSubjects(csRes.data.data);
         setSubjects(subRes.data.data);
         setTeachers(tRes.data.data);
@@ -193,7 +193,7 @@ export default function RegularTimetable() {
                 <select disabled={isEditing} {...register('class_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted">
                   <option value={0}>Select...</option>
                   {classes.map(c => (
-                    <option key={c.id} value={c.id}>{c.class_code || c.section_name}</option>
+                    <option key={c.id} value={c.id}>{c.class_code || c.section_name || `Class ${c.id}`}</option>
                   ))}
                 </select>
                 {errors.class_id && <p className="text-destructive text-xs mt-1">{errors.class_id.message as string}</p>}

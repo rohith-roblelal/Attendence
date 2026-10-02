@@ -26,20 +26,27 @@ export const getAdministrationStats = async () => {
     WHERE cs.status = 'CONDUCTED'
   `);
 
-  const [atRisk] = await pool.query(`
-    SELECT COUNT(*) as at_risk_count FROM (
-      SELECT student_id 
-      FROM attendance_records a
-      JOIN class_sessions cs ON a.class_session_id = cs.id
-      WHERE cs.status = 'CONDUCTED'
-      GROUP BY student_id
-      HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
-    ) sub
+  const [atRiskList] = await pool.query(`
+    SELECT 
+      st.student_id as admission_number, 
+      CONCAT(st.first_name, ' ', COALESCE(st.last_name, '')) as student_name, 
+      COUNT(a.id) as total_sessions, 
+      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions
+    FROM attendance_records a
+    JOIN class_sessions cs ON a.class_session_id = cs.id
+    JOIN students st ON a.student_id = st.id
+    WHERE cs.status = 'CONDUCTED'
+    GROUP BY st.id, st.student_id, st.first_name, st.last_name
+    HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
+    ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
+    LIMIT 15
   `);
 
-  const [missedAttendance] = await pool.query(`
-    SELECT COUNT(c.id) as missed_classes
+  const [missedClassesList] = await pool.query(`
+    SELECT c.class_code, c.section_name, s.name as semester_name, b.batch_name, b.department_id
     FROM classes c
+    JOIN semesters s ON c.semester_id = s.id
+    JOIN admission_batches b ON c.admission_batch_id = b.id
     WHERE c.is_active = TRUE 
     AND c.id NOT IN (
       SELECT DISTINCT class_id FROM class_sessions WHERE session_date = CURDATE() AND status = 'CONDUCTED'
@@ -54,20 +61,26 @@ export const getAdministrationStats = async () => {
   const absentToday = Number(attRow.absent_today);
 
   return {
-    academic_year: (counts as any[])[0].academic_year || 'N/A',
-    departments: (counts as any[])[0].departments,
-    active_classes: (counts as any[])[0].active_classes,
-    active_students: (counts as any[])[0].active_students,
-    active_teachers: (counts as any[])[0].active_teachers,
-    active_hods: (counts as any[])[0].active_hods,
-    active_tutors: (counts as any[])[0].active_tutors,
-    admins: (counts as any[])[0].admins,
-    inactive_users: (counts as any[])[0].inactive_users,
-    overall_attendance: totalOverall > 0 ? `${Math.round((presentOverall / totalOverall) * 100)}%` : '0%',
-    todays_attendance: totalToday > 0 ? `${Math.round((presentToday / totalToday) * 100)}%` : 'N/A',
-    absent_today: absentToday,
-    students_at_risk: (atRisk as any[])[0].at_risk_count,
-    classes_missing_attendance_today: (missedAttendance as any[])[0].missed_classes
+    kpis: {
+      academic_year: (counts as any[])[0].academic_year || 'N/A',
+      departments: (counts as any[])[0].departments,
+      active_classes: (counts as any[])[0].active_classes,
+      active_students: (counts as any[])[0].active_students,
+      active_teachers: (counts as any[])[0].active_teachers,
+      active_hods: (counts as any[])[0].active_hods,
+      active_tutors: (counts as any[])[0].active_tutors,
+      admins: (counts as any[])[0].admins,
+      inactive_users: (counts as any[])[0].inactive_users,
+      overall_attendance: totalOverall > 0 ? `${Math.round((presentOverall / totalOverall) * 100)}%` : '0%',
+      todays_attendance: totalToday > 0 ? `${Math.round((presentToday / totalToday) * 100)}%` : 'N/A',
+      absent_today: absentToday,
+      students_at_risk: (atRiskList as any[]).length,
+      classes_missing_attendance_today: (missedClassesList as any[]).length
+    },
+    lists: {
+      at_risk_students: atRiskList,
+      missed_classes: missedClassesList
+    }
   };
 };
 
@@ -287,11 +300,42 @@ export const getTeacherStats = async (teacherId: number) => {
     WHERE cs.teacher_id = ? AND cs.is_active = TRUE
   `, [teacherId]);
 
+  const [teacherRows] = await pool.query(
+    'SELECT id, user_id, teacher_id, first_name, last_name, designation, status FROM teachers WHERE id = ?',
+    [teacherId]
+  );
+  const teacher = (teacherRows as any[])[0] || { id: teacherId };
+
+  const [pendingSwaps] = await pool.query(`
+    SELECT ts.*, 
+           rt.first_name as req_first_name, rt.last_name as req_last_name,
+           rs.name as req_sub_name, ts2.name as tgt_sub_name,
+           rc.class_code as req_class_code, rc.section_name as req_section_name,
+           tc.class_code as tgt_class_code, tc.section_name as tgt_section_name
+    FROM timetable_swaps ts
+    JOIN teachers rt ON ts.requesting_teacher_id = rt.id
+    LEFT JOIN class_subjects rcs ON ts.requesting_class_subject_id = rcs.id
+    LEFT JOIN class_subjects tcs ON ts.target_class_subject_id = tcs.id
+    LEFT JOIN subjects rs ON rcs.subject_id = rs.id
+    LEFT JOIN subjects ts2 ON tcs.subject_id = ts2.id
+    LEFT JOIN classes rc ON rcs.class_id = rc.id
+    LEFT JOIN classes tc ON tcs.class_id = tc.id
+    WHERE ts.target_teacher_id = ? AND ts.status = 'PENDING'
+    ORDER BY ts.created_at DESC
+  `, [teacherId]);
+
+  const baseCounts = (counts as any[])[0] || {};
+
   return {
-    counts: (counts as any[])[0],
+    teacher,
+    counts: {
+      ...baseCounts,
+      pending_swap_requests: (pendingSwaps as any[]).length
+    },
     attendanceOverview: (attendance as any[])[0],
     classes: classes as any[],
-    assignments: assignments as any[]
+    assignments: assignments as any[],
+    pendingSwaps: pendingSwaps as any[]
   };
 };
 
@@ -426,6 +470,10 @@ export const getStudentStats = async (studentId: number) => {
 };
 
 export const getStudentTimetable = async (classId: number) => {
+  const [classInfo] = await pool.query('SELECT class_code, section_name FROM classes WHERE id = ?', [classId]);
+  const cInfo = (classInfo as any[])[0];
+  const className = cInfo ? (cInfo.class_code || cInfo.section_name) : 'Unknown Class';
+
   const [entries] = await pool.query(`
     SELECT 
       rte.id, rte.day_of_week, rte.period_number,
@@ -438,5 +486,5 @@ export const getStudentTimetable = async (classId: number) => {
     WHERE rte.class_id = ? AND rte.is_active = TRUE
     ORDER BY rte.day_of_week ASC, rte.period_number ASC
   `, [classId]);
-  return entries as any[];
+  return { class_name: className, timetable: entries as any[] };
 };

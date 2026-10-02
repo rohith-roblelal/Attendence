@@ -21,6 +21,7 @@ import classSessionsRoutes from './modules/class-sessions/class-sessions.routes'
 import attendanceRoutes from './modules/attendance/attendance.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import reportsRoutes from './modules/reports/reports.routes';
+import { swapsRouter } from './modules/swaps/swaps.routes';
 
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
@@ -107,6 +108,7 @@ app.use('/api/v1/class-sessions', classSessionsRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/reports', reportsRoutes);
+app.use('/api/v1/swaps', swapsRouter);
 
 // Error Handling
 app.use(errorHandler);

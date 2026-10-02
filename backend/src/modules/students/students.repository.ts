@@ -18,8 +18,13 @@ export const getStudents = async (filters: any) => {
     query += ' AND s.user_id = ?';
     values.push(filters.user_id);
   }
+  // Filter students enrolled in a specific class (used by AttendanceTracker)
+  if (filters.class_id) {
+    query += ' AND se.class_id = ?';
+    values.push(filters.class_id);
+  }
   
-  query += ' ORDER BY s.student_id ASC';
+  query += ' ORDER BY CAST(s.student_id AS UNSIGNED) ASC, s.student_id ASC';
   const [rows] = await pool.query(query, values);
   return rows;
 };

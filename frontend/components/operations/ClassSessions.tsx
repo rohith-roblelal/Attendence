@@ -24,7 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const createSessionSchema = z.object({
   class_id: z.number().int().positive('Class is required'),
   class_subject_id: z.number().int().positive('Subject Assignment is required'),
-  session_date: z.string().min(1, 'Date is required'),
+  session_date: z.string().optional().or(z.literal('')),
   period_number: z.number().int().positive('Period is required'),
   conducted_by_teacher_id: z.number().int().positive().optional().or(z.literal('')),
   contact_hours: z.number().positive().optional().or(z.literal('')),
@@ -251,7 +251,7 @@ export default function ClassSessions() {
               </div>
 
               <div className="space-y-2">
-                <Label>Date</Label>
+                <Label>Date (Optional)</Label>
                 <Input disabled={isEditing} type="date" {...register('session_date')} className="disabled:bg-muted" />
                 {errors.session_date && <p className="text-destructive text-xs mt-1">{errors.session_date.message as string}</p>}
               </div>

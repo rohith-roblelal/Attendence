@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, Clock, BookOpen, User } from 'lucide-react';
 
 export default function StudentTimetablePage() {
   const [timetable, setTimetable] = useState<any[]>([]);
+  const [className, setClassName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,7 +15,12 @@ export default function StudentTimetablePage() {
     const fetchTimetable = async () => {
       try {
         const response = await apiClient.get('/dashboard/student/timetable');
-        setTimetable(response.data.data);
+        if (Array.isArray(response.data.data)) {
+          setTimetable(response.data.data);
+        } else {
+          setTimetable(response.data.data.timetable || []);
+          setClassName(response.data.data.class_name || '');
+        }
       } catch (err: any) {
         console.error("Failed to fetch timetable", err);
         setError(err.response?.data?.message || 'Failed to load timetable. Please try again later.');
@@ -47,7 +53,13 @@ export default function StudentTimetablePage() {
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Timetable</h1>
-        <p className="text-muted-foreground mt-2">View your weekly class schedule assigned by your teachers.</p>
+        <p className="text-muted-foreground mt-2">
+          {className ? (
+            <span className="font-medium text-foreground bg-muted px-2 py-1 rounded-md">Class: {className}</span>
+          ) : (
+            'View your weekly class schedule assigned by your teachers.'
+          )}
+        </p>
       </div>
 
       {error ? (

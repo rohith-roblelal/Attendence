@@ -43,8 +43,8 @@ export const getActiveStudentEnrollment = async (conn: Connection, studentId: nu
   const [rows] = await conn.query(`
     SELECT id FROM student_enrollments 
     WHERE student_id = ? AND class_id = ? 
-      AND start_date <= ? AND (end_date IS NULL OR end_date >= ?)
-  `, [studentId, classId, sessionDate, sessionDate]);
+      AND (end_date IS NULL OR end_date >= ?)
+  `, [studentId, classId, sessionDate]);
   return (rows as any[])[0] || null;
 };
 
@@ -81,7 +81,7 @@ export const getStudentAttendanceSummary = async (studentId: number) => {
     JOIN subjects sub ON csub.subject_id = sub.id
     LEFT JOIN attendance_records a ON cs.id = a.class_session_id AND a.student_id = ?
     JOIN student_enrollments se ON se.student_id = ? AND se.class_id = cs.class_id 
-       AND se.start_date <= cs.session_date AND (se.end_date IS NULL OR se.end_date >= cs.session_date)
+       AND (se.end_date IS NULL OR se.end_date >= cs.session_date)
     WHERE cs.status != 'CANCELLED'
     GROUP BY sub.id, sub.name
   `;
