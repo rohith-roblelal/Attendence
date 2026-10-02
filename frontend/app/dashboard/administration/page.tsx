@@ -9,9 +9,50 @@ import { apiClient } from "../../../lib/api/client";
 import Link from "next/link";
 import { AlertCircle, CalendarX2 } from 'lucide-react';
 
+const AT_RISK_THRESHOLD = 75;
+
+// Sections shown on the dashboard. Keys must match the keys in `kpis` from the API.
+const SECTIONS = [
+  { title: 'Academics', keys: ['academic_year', 'departments', 'active_classes'] },
+  { title: 'People', keys: ['active_students', 'active_teachers', 'active_hods', 'active_tutors', 'admins', 'inactive_users'] },
+  { title: 'Attendance', keys: ['overall_attendance', 'todays_attendance', 'absent_today'] },
+  { title: 'Alerts', keys: ['students_at_risk', 'classes_missing_attendance_today'] },
+];
+
+// Custom labels (anything not listed here is auto-formatted from the key).
+const LABELS: Record<string, string> = {
+  todays_attendance: "Today's Attendance",
+  classes_missing_attendance_today: 'Pending Attendance Today',
+};
+
+// Small hint shown under a card value.
+const SUBTEXT: Record<string, string> = {
+  students_at_risk: `Below ${AT_RISK_THRESHOLD}% attendance`,
+  classes_missing_attendance_today: 'Not marked yet today',
+};
+
+// Alert cards: colour when value > 0, and which tab they open.
+const ALERTS: Record<string, { tone: 'danger' | 'warning'; tab: 'at_risk' | 'missed_classes' }> = {
+  students_at_risk: { tone: 'danger', tab: 'at_risk' },
+  classes_missing_attendance_today: { tone: 'warning', tab: 'missed_classes' },
+};
+
+const TONE_CLASSES = {
+  danger: 'border-red-500/50 bg-red-50 dark:bg-red-950/20',
+  warning: 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/20',
+};
+const TONE_TEXT = {
+  danger: 'text-red-600 dark:text-red-400',
+  warning: 'text-amber-600 dark:text-amber-400',
+};
+
+const formatKey = (key: string) =>
+  LABELS[key] ?? key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+
 export default function AdministrationPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<string>('at_risk');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,11 +68,9 @@ export default function AdministrationPage() {
     fetchData();
   }, []);
 
-  const formatKey = (key: string) => {
-    return key
-      .replace(/_/g, ' ')
-      .replace(/([A-Z])/g, ' $1')
-      .trim();
+  const openAlert = (target: string) => {
+    setTab(target);
+    document.getElementById('alerts-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   if (loading) {
@@ -39,7 +78,7 @@ export default function AdministrationPage() {
       <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-6">
-          {[1,2,3,4,5,6].map(i => (
+          {[1, 2, 3, 4, 5, 6].map(i => (
             <Card key={i}>
               <CardHeader className="pb-2"><CardTitle className="h-4 w-1/2 bg-muted rounded animate-pulse"></CardTitle></CardHeader>
               <CardContent><div className="h-8 w-1/3 bg-muted rounded animate-pulse"></div></CardContent>
@@ -63,30 +102,79 @@ export default function AdministrationPage() {
   const atRiskStudents = lists?.at_risk_students || [];
   const missedClasses = lists?.missed_classes || [];
 
+  // No attendance has been recorded yet: today's % is N/A and overall % is 0.
+  // (Best fix is on the API: return null instead of 0 when there are no records.)
+  const noRecords =
+    String(kpis.todays_attendance) === 'N/A' && parseFloat(String(kpis.overall_attendance)) === 0;
+  const todayNotTaken = String(kpis.todays_attendance) === 'N/A';
+
+  const displayValue = (key: string, value: unknown) => {
+    if (key === 'overall_attendance' && noRecords) return 'N/A';
+    if (key === 'absent_today' && todayNotTaken) return 'N/A';
+    return String(value);
+  };
+
+  // Any KPI the API returns that isn't listed above still shows up here.
+  const knownKeys = SECTIONS.flatMap(s => s.keys);
+  const otherKeys = Object.keys(kpis).filter(k => !knownKeys.includes(k));
+  const sections = otherKeys.length ? [...SECTIONS, { title: 'Other', keys: otherKeys }] : SECTIONS;
+
+  const modules = [
+    { href: '/dashboard/administration/academic', title: 'Academic Structure', desc: 'Manage years, departments, classes' },
+    { href: '/dashboard/administration/people', title: 'People', desc: 'Manage students and teachers' },
+    { href: '/dashboard/administration/sessions', title: 'Class Sessions', desc: 'Assign subjects and sessions' },
+    { href: '/dashboard/administration/timetable', title: 'Timetable', desc: 'Manage weekly timetables' },
+    { href: '/dashboard/administration/attendence', title: 'Attendance', desc: 'Track and record attendance' },
+    { href: '/dashboard/report', title: 'Reports', desc: 'View analytical reports' },
+  ];
+
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
-      <p className="text-muted-foreground">Here is your live overview of key metrics fetched directly from the database.</p>
-      
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 mt-6">
-        {Object.entries(kpis).map(([key, value]) => {
-          return (
-            <Card key={key} className="overflow-hidden hover:bg-muted/10 transition-colors">
-              <CardHeader className="pb-2">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {formatKey(key)}
-                </h3>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{String(value)}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <p className="text-muted-foreground">Live overview of key metrics.</p>
 
-      <div className="pt-8">
-        <Tabs defaultValue="at_risk" className="w-full">
+      {sections.map(section => {
+        const keys = section.keys.filter(k => k in kpis);
+        if (keys.length === 0) return null;
+        return (
+          <section key={section.title} className="space-y-3">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{section.title}</h2>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {keys.map(key => {
+                const value = kpis[key];
+                const alert = ALERTS[key];
+                const active = alert && Number(value) > 0;
+                const clickable = !!alert;
+                return (
+                  <Card
+                    key={key}
+                    role={clickable ? 'button' : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                    onClick={clickable ? () => openAlert(alert.tab) : undefined}
+                    onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') openAlert(alert.tab); } : undefined}
+                    className={`overflow-hidden transition-colors ${active ? TONE_CLASSES[alert.tone] : 'hover:bg-muted/10'} ${clickable ? 'cursor-pointer' : ''}`}
+                  >
+                    <CardHeader className="pb-2">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                        {formatKey(key)}
+                      </h3>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-3xl font-bold ${active ? TONE_TEXT[alert.tone] : ''}`}>
+                        {displayValue(key, value)}
+                      </div>
+                      {SUBTEXT[key] && <p className="text-xs text-muted-foreground mt-1">{SUBTEXT[key]}</p>}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+
+      <div id="alerts-section" className="pt-8 scroll-mt-6">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="grid w-full md:w-auto grid-cols-2">
             <TabsTrigger value="at_risk" className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-destructive" />
@@ -94,14 +182,14 @@ export default function AdministrationPage() {
             </TabsTrigger>
             <TabsTrigger value="missed_classes" className="flex items-center gap-2">
               <CalendarX2 className="h-4 w-4 text-orange-500" />
-              Missing Attendance Today ({missedClasses.length})
+              Pending Attendance Today ({missedClasses.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="at_risk" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Students with &lt; 75% Attendance</CardTitle>
+                <CardTitle>Students with &lt; {AT_RISK_THRESHOLD}% Attendance</CardTitle>
               </CardHeader>
               <CardContent>
                 {atRiskStudents.length === 0 ? (
@@ -129,9 +217,7 @@ export default function AdministrationPage() {
                             <TableCell>{sTotal}</TableCell>
                             <TableCell>{sPresent}</TableCell>
                             <TableCell>
-                              <Badge variant="destructive">
-                                {sPerc}%
-                              </Badge>
+                              <Badge variant="destructive">{sPerc}%</Badge>
                             </TableCell>
                           </TableRow>
                         );
@@ -146,7 +232,7 @@ export default function AdministrationPage() {
           <TabsContent value="missed_classes" className="mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Classes with Missing Attendance Today</CardTitle>
+                <CardTitle>Classes with Attendance Not Marked Today</CardTitle>
               </CardHeader>
               <CardContent>
                 {missedClasses.length === 0 ? (
@@ -180,54 +266,16 @@ export default function AdministrationPage() {
       <div className="pt-8">
         <h2 className="text-2xl font-bold tracking-tight mb-4">Admin Modules</h2>
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-          <Link href="/dashboard/administration/academic">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Academic Structure</CardTitle>
-                <p className="text-sm text-muted-foreground">Manage years, departments, classes</p>
-              </CardHeader>
-            </Card>
-          </Link>
-          <Link href="/dashboard/administration/people">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">People</CardTitle>
-                <p className="text-sm text-muted-foreground">Manage students and teachers</p>
-              </CardHeader>
-            </Card>
-          </Link>
-          <Link href="/dashboard/administration/sessions">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Class Sessions</CardTitle>
-                <p className="text-sm text-muted-foreground">Assign subjects and sessions</p>
-              </CardHeader>
-            </Card>
-          </Link>
-          <Link href="/dashboard/administration/timetable">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Timetable</CardTitle>
-                <p className="text-sm text-muted-foreground">Manage weekly timetables</p>
-              </CardHeader>
-            </Card>
-          </Link>
-          <Link href="/dashboard/administration/attendence">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Attendance</CardTitle>
-                <p className="text-sm text-muted-foreground">Track and record attendance</p>
-              </CardHeader>
-            </Card>
-          </Link>
-          <Link href="/dashboard/report">
-            <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
-              <CardHeader>
-                <CardTitle className="text-lg">Reports</CardTitle>
-                <p className="text-sm text-muted-foreground">View analytical reports</p>
-              </CardHeader>
-            </Card>
-          </Link>
+          {modules.map(m => (
+            <Link key={m.href} href={m.href}>
+              <Card className="hover:bg-primary/5 transition-colors cursor-pointer border-primary/20 hover:border-primary/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">{m.title}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{m.desc}</p>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
         </div>
       </div>
     </div>
