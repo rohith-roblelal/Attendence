@@ -58,5 +58,5 @@ export const updateSubject = async (id: number, data: any) => {
 };
 
 export const deleteSubject = async (id: number) => {
-  await pool.query('DELETE FROM subjects WHERE id = ?', [id]);
+  await pool.query('UPDATE subjects SET is_active = FALSE, updated_at = NOW() WHERE id = ?', [id]);
 };

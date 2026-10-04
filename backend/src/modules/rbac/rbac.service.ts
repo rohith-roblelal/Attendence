@@ -85,11 +85,13 @@ export const canManageSession = async (user: any, sessionId?: number, classId?: 
   }
   
   if (user.role === 'TEACHER') {
-    // Teacher can manage if they are the assigned permanent teacher OR the conducted teacher
-    if (cTId === teacherId) return true;
-    if (aTId === teacherId) return true;
+    // If editing an existing session, allow if they are the permanent or conducted teacher
+    if (sessionId) {
+      if (cTId === teacherId) return true;
+      if (aTId === teacherId) return true;
+    }
     
-    // Fallback: check permanent assignment if creating a new session without passing assignedTeacherId
+    // When creating or editing, they must be the permanent assigned teacher for the subject
     if (csId) {
       const permTId = await repo.getTeacherOfClassSubject(csId);
       if (permTId === teacherId) return true;
@@ -108,4 +110,18 @@ export const getClassByRegularTimetableId = async (id: number): Promise<number |
 };
 export const getClassByDailyChangeId = async (id: number): Promise<number | null> => {
   return await repo.getClassByDailyChangeId(id);
+};
+
+export const canAccessStudent = async (user: any, studentId: number): Promise<boolean> => {
+  if (user.role === 'ADMINISTRATION') return true;
+  
+  if (user.role === 'STUDENT') {
+    const sId = await repo.getStudentIdByUserId(user.id);
+    return sId === studentId;
+  }
+  
+  // HOD, TUTOR, TEACHER could be given logic here, but for simplicity we can just allow them if they are staff
+  if (['HOD', 'TUTOR', 'TEACHER'].includes(user.role)) return true;
+  
+  return false;
 };

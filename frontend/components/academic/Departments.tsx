@@ -169,9 +169,9 @@ const fetchDepartments = async () => {
                       <DialogTrigger className="cursor-pointer text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 py-2 rounded-md inline-flex items-center justify-center">
                         Specializations
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>{dept.name} - Specializations</DialogTitle>
+                      <DialogContent className="sm:max-w-5xl max-w-5xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader className="pr-6">
+                          <DialogTitle className="break-words whitespace-normal leading-tight">{dept.name} - Specializations</DialogTitle>
                         </DialogHeader>
                         <Specializations departmentId={dept.id} />
                       </DialogContent>

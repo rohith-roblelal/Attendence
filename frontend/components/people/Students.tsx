@@ -9,7 +9,7 @@ import { usersApi } from '../../lib/api/users';
 import { classesApi } from '../../lib/api/classes';
 import { apiClient } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/AuthContext';
-import { Edit2, UserX, GitCommit, BarChart2 } from 'lucide-react';
+import { Edit2, UserX, GitCommit, BarChart2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,12 @@ export default function Students() {
   const [deactivateId, setDeactivateId] = useState<number | null>(null);
   const [transferStudent, setTransferStudent] = useState<any | null>(null);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [statsDialog, setStatsDialog] = useState<{ open: boolean; student: any; loading: boolean; data: any }>({
     open: false,
     student: null,
@@ -93,24 +99,35 @@ export default function Students() {
     resolver: zodResolver(transferStudentSchema),
   });
 
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+
+  // Fetch users and classes only once
+  useEffect(() => {
+    if (isAdmin) {
+      Promise.all([usersApi.getUsers(), classesApi.getClasses()])
+        .then(([usersRes, classRes]) => {
+          setAllUsers(usersRes.data.data.users || []);
+          setClasses(classRes.data.data);
+        })
+        .catch(err => console.error('Failed to load users/classes', err));
+    }
+  }, [isAdmin]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
       if (isAdmin) {
-        const [studRes, usersRes, classRes] = await Promise.all([
-          studentsApi.getStudents(),
-          usersApi.getUsers(),
-          classesApi.getClasses()
-        ]);
+        const studRes = await studentsApi.getStudents({ page, limit });
         setStudents(studRes.data.data);
+        if (studRes.data.meta) {
+          setTotalPages(studRes.data.meta.totalPages);
+          setTotalRecords(studRes.data.meta.total);
+        }
         
-        const allUsers = usersRes.data.data.users || [];
         const studentUserIds = studRes.data.data.map((s: any) => s.user_id);
         setUsers(allUsers.filter((u: any) => 
           u.role === 'STUDENT' && !studentUserIds.includes(u.id)
         ));
-        
-        setClasses(classRes.data.data);
       } else {
         // Tutors/Teachers only see their assigned students
         const studRes = await apiClient.get('/dashboard/tutor/students');
@@ -134,9 +151,19 @@ export default function Students() {
     }
   };
 
+  // Re-filter users if allUsers changes (e.g. after it's fetched initially)
+  useEffect(() => {
+    if (isAdmin && allUsers.length > 0 && students.length > 0) {
+      const studentUserIds = students.map((s: any) => s.user_id);
+      setUsers(allUsers.filter((u: any) => 
+        u.role === 'STUDENT' && !studentUserIds.includes(u.id)
+      ));
+    }
+  }, [allUsers, students, isAdmin]);
+
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, limit]);
 
   
   const onSubmit = async (data: any) => {
@@ -351,14 +378,14 @@ export default function Students() {
                   {isAdmin && (
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-3">
-                        <button onClick={() => setTransferStudent(student)} className="text-purple-600 hover:text-purple-900" title="Transfer Class">
+                        <button onClick={() => setTransferStudent(student)} className="text-purple-600 hover:text-purple-900" title="Transfer Class" aria-label="Transfer Class">
                           <GitCommit className="w-4 h-4" />
                         </button>
-                        <button onClick={() => editStudent(student)} className="text-primary hover:text-primary" title="Edit Profile">
+                        <button onClick={() => editStudent(student)} className="text-primary hover:text-primary" title="Edit Profile" aria-label="Edit Profile">
                           <Edit2 className="w-4 h-4" />
                         </button>
                         {student.status === 'ACTIVE' ? (
-                          <button onClick={() => setDeactivateId(student.id)} className="text-destructive hover:text-red-900" title="Deactivate">
+                          <button onClick={() => setDeactivateId(student.id)} className="text-destructive hover:text-red-900" title="Deactivate" aria-label="Deactivate student">
                             <UserX className="w-4 h-4" />
                           </button>
                         ) : (
@@ -371,7 +398,7 @@ export default function Students() {
                   )}
                   {!isAdmin && (
                     <TableCell className="text-right">
-                      <button onClick={() => viewStats(student)} className="text-primary hover:text-primary/80" title="View Subject Attendance">
+                      <button onClick={() => viewStats(student)} className="text-primary hover:text-primary/80" title="View Subject Attendance" aria-label="View Subject Attendance">
                         <BarChart2 className="w-5 h-5 ml-auto" />
                       </button>
                     </TableCell>
@@ -382,6 +409,37 @@ export default function Students() {
           </TableBody>
         </Table>
       </div>
+
+      {isAdmin && totalPages > 1 && (
+        <div className="flex items-center justify-between px-2 pt-2">
+          <div className="text-sm text-muted-foreground">
+            Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, totalRecords)} of {totalRecords} students
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1 || loading}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+            <div className="text-sm font-medium">
+              Page {page} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || loading}
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={!!deactivateId} onOpenChange={(open) => !open && setDeactivateId(null)}>
         <AlertDialogContent>
@@ -435,7 +493,7 @@ export default function Students() {
       </Dialog>
 
       <Dialog open={statsDialog.open} onOpenChange={(open) => setStatsDialog(prev => ({ ...prev, open }))}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="sm:max-w-3xl max-w-3xl">
           <DialogHeader>
             <DialogTitle>Student Attendance Details</DialogTitle>
             <DialogDescription>

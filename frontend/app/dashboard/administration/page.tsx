@@ -52,15 +52,18 @@ const formatKey = (key: string) =>
 export default function AdministrationPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<string>('at_risk');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setError(null);
         const response = await apiClient.get('/dashboard/administration');
         setData(response.data.data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch dashboard data", error);
+        setError(error.response?.data?.message || 'Failed to load dashboard data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -85,6 +88,20 @@ export default function AdministrationPage() {
             </Card>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight capitalize">Administration Dashboard</h1>
+        <Card className="mt-6 border-red-200 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="pt-6 flex flex-col items-center text-center space-y-2">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <p className="text-red-700 dark:text-red-400 font-medium">{error}</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -115,9 +132,11 @@ export default function AdministrationPage() {
   };
 
   // Any KPI the API returns that isn't listed above still shows up here.
-  const knownKeys = SECTIONS.flatMap(s => s.keys);
-  const otherKeys = Object.keys(kpis).filter(k => !knownKeys.includes(k));
-  const sections = otherKeys.length ? [...SECTIONS, { title: 'Other', keys: otherKeys }] : SECTIONS;
+  const sections = React.useMemo(() => {
+    const knownKeys = SECTIONS.flatMap(s => s.keys);
+    const otherKeys = Object.keys(kpis).filter(k => !knownKeys.includes(k));
+    return otherKeys.length ? [...SECTIONS, { title: 'Other', keys: otherKeys }] : SECTIONS;
+  }, [kpis]);
 
   const modules = [
     { href: '/dashboard/administration/academic', title: 'Academic Structure', desc: 'Manage years, departments, classes' },

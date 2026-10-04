@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import * as service from './attendance.service';
 
 export const getAll = async (req: Request, res: Response, next: NextFunction) => {
-  try { res.status(200).json({ status: 'success', data: await service.getAll(req.query) }); } catch (err) { next(err); }
+  try {
+    const result = await service.getAll(req.query);
+    res.status(200).json({ status: 'success', data: result.data, meta: result.meta });
+  } catch (err) { next(err); }
 };
 export const getById = async (req: Request, res: Response, next: NextFunction) => {
   try { res.status(200).json({ status: 'success', data: await service.getById(Number(req.params.id)) }); } catch (err) { next(err); }

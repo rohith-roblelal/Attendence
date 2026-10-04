@@ -1,11 +1,9 @@
 import { pool } from '../../db/pool';
 import { Connection } from 'mysql2/promise';
+import { canManageSession } from '../rbac/rbac.service';
 
 export const getAttendance = async (filters: any) => {
-  let query = `
-    SELECT a.*, s.first_name as student_first_name, s.last_name as student_last_name,
-           cs.session_date, cs.period_number, cs.status as session_status, cs.contact_hours,
-           c.section_name, sub.name as subject_name, pt.first_name as conducted_teacher_name
+  let baseQuery = `
     FROM attendance_records a
     JOIN class_sessions cs ON a.class_session_id = cs.id
     JOIN students s ON a.student_id = s.id
@@ -17,16 +15,46 @@ export const getAttendance = async (filters: any) => {
   `;
   const values: any[] = [];
   
-  if (filters.class_session_id) { query += ' AND a.class_session_id = ?'; values.push(filters.class_session_id); }
-  if (filters.student_id) { query += ' AND a.student_id = ?'; values.push(filters.student_id); }
-  if (filters.class_id) { query += ' AND cs.class_id = ?'; values.push(filters.class_id); }
-  if (filters.subject_id) { query += ' AND csub.subject_id = ?'; values.push(filters.subject_id); }
-  if (filters.session_date) { query += ' AND cs.session_date = ?'; values.push(filters.session_date); }
-  if (filters.status) { query += ' AND a.status = ?'; values.push(filters.status); }
+  if (filters.class_session_id) { baseQuery += ' AND a.class_session_id = ?'; values.push(filters.class_session_id); }
+  if (filters.student_id) { baseQuery += ' AND a.student_id = ?'; values.push(filters.student_id); }
+  if (filters.class_id) { baseQuery += ' AND cs.class_id = ?'; values.push(filters.class_id); }
+  if (filters.subject_id) { baseQuery += ' AND csub.subject_id = ?'; values.push(filters.subject_id); }
+  if (filters.session_date) { baseQuery += ' AND cs.session_date = ?'; values.push(filters.session_date); }
+  if (filters.status) { baseQuery += ' AND a.status = ?'; values.push(filters.status); }
   
-  query += ' ORDER BY cs.session_date DESC, cs.period_number ASC';
+  const page = filters.page ? parseInt(filters.page, 10) : 1;
+  const limit = filters.limit ? parseInt(filters.limit, 10) : 0;
+
+  let query = `
+    SELECT a.*, s.first_name as student_first_name, s.last_name as student_last_name,
+           cs.session_date, cs.period_number, cs.status as session_status, cs.contact_hours,
+           c.section_name, sub.name as subject_name, pt.first_name as conducted_teacher_name
+    ${baseQuery}
+    ORDER BY cs.session_date DESC, cs.period_number ASC
+  `;
+  let total = 0;
+
+  if (limit > 0) {
+    const offset = (page - 1) * limit;
+    const [countRows] = await pool.query(`SELECT COUNT(*) as total ${baseQuery}`, values);
+    total = (countRows as any[])[0].total;
+    
+    query += ` LIMIT ? OFFSET ?`;
+    values.push(limit, offset);
+  }
+
   const [rows] = await pool.query(query, values);
-  return rows;
+  if (limit === 0) total = (rows as any[]).length;
+
+  return {
+    data: rows,
+    meta: {
+      total,
+      page,
+      limit: limit > 0 ? limit : total,
+      totalPages: limit > 0 ? Math.ceil(total / limit) : 1
+    }
+  };
 };
 
 export const getById = async (id: number) => {
@@ -97,6 +125,5 @@ export const isTeacherAuthorizedForSession = async (conn: Connection, userId: nu
   if (!user) return false;
   
   // Delegate to the centralized RBAC service which handles HOD/Tutor scoping correctly
-  const rbacService = require('../rbac/rbac.service');
-  return await rbacService.canManageSession(user, sessionId);
+  return await canManageSession(user, sessionId);
 };

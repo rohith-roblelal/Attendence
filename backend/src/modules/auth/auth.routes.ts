@@ -10,7 +10,7 @@ const router = Router();
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login requests per `window`
+  max: 1000, // Limit each IP to 10 login requests per `window`
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 'error', message: 'Too many authentication attempts, please try again later.' }

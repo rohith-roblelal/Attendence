@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as rbacService from '../modules/rbac/rbac.service';
 
-export const authorizeScope = (scopeType: 'DEPARTMENT' | 'CLASS' | 'SUBJECT' | 'CLASS_SUBJECT' | 'SESSION' | 'TIMETABLE' | 'ATTENDANCE') => {
+export const authorizeScope = (scopeType: 'DEPARTMENT' | 'CLASS' | 'SUBJECT' | 'CLASS_SUBJECT' | 'SESSION' | 'TIMETABLE' | 'ATTENDANCE' | 'STUDENT') => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
@@ -56,6 +56,12 @@ export const authorizeScope = (scopeType: 'DEPARTMENT' | 'CLASS' | 'SUBJECT' | '
           if (session) {
             hasAccess = await rbacService.canManageSession(user, session.id, session.class_id, session.class_subject_id, session.conducted_by_teacher_id);
           }
+        }
+      }
+      else if (scopeType === 'STUDENT') {
+        const studentId = Number(req.params.id) || Number(req.params.studentId);
+        if (studentId) {
+          hasAccess = await rbacService.canAccessStudent(user, studentId);
         }
       }
 

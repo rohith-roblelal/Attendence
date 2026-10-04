@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { apiClient } from "../../../lib/api/client";
 import { Users, CheckCircle, Calendar, Percent } from 'lucide-react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
@@ -14,6 +16,13 @@ export default function TutorPage() {
   const [studentsData, setStudentsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [statsDialog, setStatsDialog] = useState<{ open: boolean; student: any; loading: boolean; data: any }>({
+    open: false,
+    student: null,
+    loading: false,
+    data: null,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +83,17 @@ export default function TutorPage() {
 
   const students = studentsData?.students || [];
   const timetable = studentsData?.timetable || [];
+
+  const viewStats = async (student: any) => {
+    setStatsDialog({ open: true, student, loading: true, data: null });
+    try {
+      const id = student.student_id || student.id;
+      const res = await apiClient.get(`/dashboard/tutor/students/${id}/stats`);
+      setStatsDialog(prev => ({ ...prev, loading: false, data: res.data.data }));
+    } catch (err) {
+      setStatsDialog(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   return (
     <ProtectedRoute allowedRoles={['TUTOR']}>
@@ -160,7 +180,11 @@ export default function TutorPage() {
                         const sPresent = Number(student.present_records) || 0;
                         const sPerc = sTotal > 0 ? Math.round((sPresent / sTotal) * 100) : 0;
                         return (
-                          <TableRow key={student.student_id}>
+                          <TableRow 
+                            key={student.student_id}
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => viewStats(student)}
+                          >
                             <TableCell className="font-medium">{student.admission_number}</TableCell>
                             <TableCell>{student.student_name}</TableCell>
                             <TableCell>{sTotal}</TableCell>
@@ -215,6 +239,61 @@ export default function TutorPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={statsDialog.open} onOpenChange={(open) => setStatsDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-[800px] w-[95vw] overflow-y-auto max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Student Attendance Details</DialogTitle>
+            <DialogDescription>
+              {statsDialog.student && `${statsDialog.student.student_name} (${statsDialog.student.admission_number})`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {statsDialog.loading ? (
+              <div className="text-center text-muted-foreground py-8">Loading attendance data...</div>
+            ) : (statsDialog.data?.subjectAttendance?.length > 0 || statsDialog.data?.length > 0) ? (
+              <div className="border rounded-md overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead className="text-center">Total Sessions</TableHead>
+                      <TableHead className="text-center">Present</TableHead>
+                      <TableHead className="text-right">Percentage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(statsDialog.data?.subjectAttendance || statsDialog.data).map((sub: any) => {
+                      const total = Number(sub.total_sessions || 0);
+                      const present = Number(sub.present_sessions || 0);
+                      const percent = total > 0 ? Math.round((present / total) * 100) : 0;
+                      return (
+                        <TableRow key={sub.subject_id}>
+                          <TableCell className="font-medium">
+                            <div>{sub.subject_name}</div>
+                            <div className="text-xs text-muted-foreground">{sub.subject_code || '-'}</div>
+                          </TableCell>
+                          <TableCell className="text-center">{total}</TableCell>
+                          <TableCell className="text-center text-green-600 font-medium">{present}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={percent >= 75 ? "default" : "destructive"}>{percent}%</Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-8">No attendance records found for this student.</div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setStatsDialog(prev => ({ ...prev, open: false }))}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   );
 }

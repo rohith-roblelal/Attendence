@@ -86,12 +86,14 @@ export const getDepartmentAttendanceReport = async (departmentId: number) => {
       SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_records,
       (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0)) * 100 as percentage
     FROM classes c
-    LEFT JOIN students s ON s.status = 'ACTIVE'
+    JOIN admission_batches b ON c.admission_batch_id = b.id
+    LEFT JOIN student_enrollments se ON se.class_id = c.id AND se.status = 'ACTIVE'
+    LEFT JOIN students s ON s.id = se.student_id AND s.status = 'ACTIVE'
     LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
     LEFT JOIN attendance_records a ON a.class_session_id = cs.id AND a.student_id = s.id
-    WHERE c.is_active = TRUE
-    GROUP BY c.id
-  `, []);
+    WHERE b.department_id = ? AND c.is_active = TRUE
+    GROUP BY c.id, c.class_code
+  `, [departmentId]);
 
   return normalizeNumerics(report as any[]);
 };
@@ -110,7 +112,7 @@ export const getHodDepartmentReport = async (departmentId: number, academicYearI
     JOIN admission_batches b ON c.admission_batch_id = b.id
     LEFT JOIN student_enrollments se ON se.class_id = c.id AND se.status = 'ACTIVE'
     LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
-    LEFT JOIN attendance_records ar ON ar.class_session_id = cs.id
+    LEFT JOIN attendance_records ar ON ar.class_session_id = cs.id AND ar.student_id = se.student_id
     WHERE b.department_id = ? AND sem.academic_year_id = ? AND c.is_active = TRUE
     GROUP BY c.id, b.batch_name, sem.name, c.section_name
     ORDER BY b.batch_name ASC, sem.name ASC, c.section_name ASC
@@ -130,8 +132,8 @@ export const getHodDepartmentReport = async (departmentId: number, academicYearI
     JOIN classes c ON se.class_id = c.id
     JOIN semesters sem ON c.semester_id = sem.id
     JOIN admission_batches b ON c.admission_batch_id = b.id
-    LEFT JOIN attendance_records ar ON ar.student_id = st.id
-    LEFT JOIN class_sessions cs ON ar.class_session_id = cs.id AND cs.status = 'CONDUCTED'
+    LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
+    LEFT JOIN attendance_records ar ON ar.class_session_id = cs.id AND ar.student_id = st.id
     WHERE b.department_id = ? AND sem.academic_year_id = ? AND st.status = 'ACTIVE'
     GROUP BY st.id, st.admission_number, st.first_name, st.last_name, class_name
     ORDER BY class_name ASC, student_name ASC

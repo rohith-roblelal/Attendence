@@ -8,6 +8,7 @@ import { subjectsApi } from '../../lib/api/subjects';
 import { studentsApi } from '../../lib/api/students';
 import { attendanceApi } from '../../lib/api/attendance';
 import { Check, X, AlertCircle } from 'lucide-react';
+import React from 'react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,20 @@ export default function AttendanceTracker() {
 
   // local state for marking attendance
   const [attendanceMarks, setAttendanceMarks] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
+
+  // Performance Optimization: Memoize subject lookups
+  const subjectsMap = React.useMemo(() => {
+    const map = new Map<number, string>();
+    subjects.forEach(s => map.set(s.id, s.name));
+    return map;
+  }, [subjects]);
+
+  // Performance Optimization: Memoize attendance lookups
+  const existingAttendanceMap = React.useMemo(() => {
+    const map = new Map<number, any>();
+    existingAttendance.forEach(a => map.set(a.student_id, a));
+    return map;
+  }, [existingAttendance]);
 
 const fetchBaseData = async () => {
     setLoadingData(true);
@@ -119,7 +134,7 @@ const fetchBaseData = async () => {
     students.forEach(s => {
       // Don't overwrite existing attendance records with the bulk action to prevent accidental edits
       // Only set for students who haven't been marked yet
-      const existing = existingAttendance.find(a => a.student_id === s.id);
+      const existing = existingAttendanceMap.get(s.id);
       if (!existing) {
         newMarks[s.id] = status;
       }
@@ -145,7 +160,7 @@ const fetchBaseData = async () => {
 
       for (const [studentIdStr, status] of Object.entries(attendanceMarks)) {
         const studentId = Number(studentIdStr);
-        const existing = existingAttendance.find(a => a.student_id === studentId);
+        const existing = existingAttendanceMap.get(studentId);
         
         if (existing) {
           if (existing.status !== status) {
@@ -178,13 +193,14 @@ const fetchBaseData = async () => {
     }
   };
 
-  const availableSessions = sessions.filter(s => s.class_id === selectedClassId);
+  const availableSessions = React.useMemo(() => 
+    sessions.filter(s => s.class_id === selectedClassId),
+  [sessions, selectedClassId]);
 
   const getSubjectName = (csId: number) => {
     const cs = classSubjects.find(c => c.id === csId);
     if (!cs) return 'Unknown';
-    const sub = subjects.find(s => s.id === cs.subject_id);
-    return sub?.name || 'Unknown';
+    return subjectsMap.get(cs.subject_id) || 'Unknown';
   };
 
   if (loadingData) return <div className="p-4 text-muted-foreground">Loading foundational data...</div>;
@@ -270,7 +286,7 @@ const fetchBaseData = async () => {
                 <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No students enrolled in this class.</TableCell></TableRow>
               ) : (
                 students.map(student => {
-                  const existing = existingAttendance.find(a => a.student_id === student.id);
+                  const existing = existingAttendanceMap.get(student.id);
                   const currentMark = attendanceMarks[student.id];
 
                   return (

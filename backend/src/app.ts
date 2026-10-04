@@ -43,10 +43,9 @@ const allowedOrigins = env.FRONTEND_URL ? env.FRONTEND_URL.split(',').map(u => u
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests) only if not in production, 
-    // or if the origin is in the allowed list.
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || env.NODE_ENV === 'development') {
+    // Allow requests with no origin only in development (like Postman).
+    if (!origin && env.NODE_ENV === 'development') return callback(null, true);
+    if ((origin && allowedOrigins.indexOf(origin) !== -1) || env.NODE_ENV === 'development') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

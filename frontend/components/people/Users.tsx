@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { usersApi } from '../../lib/api/users';
-import { Edit2, UserX } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export default function Users() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
-  const [deactivateId, setDeactivateId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,16 +98,16 @@ export default function Users() {
     setError(null);
   };
 
-  const handleDeactivate = async () => {
-    if (!deactivateId) return;
+  const handleDelete = async () => {
+    if (!deleteId) return;
     setError(null);
     try {
-      await usersApi.deactivateUser(deactivateId);
-      setDeactivateId(null);
+      await usersApi.deleteUser(deleteId);
+      setDeleteId(null);
       fetchUsers();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to deactivate user');
-      setDeactivateId(null);
+      setError(err.response?.data?.message || 'Failed to delete user');
+      setDeleteId(null);
     }
   };
 
@@ -230,15 +230,9 @@ export default function Users() {
                       <button onClick={() => editUser(user)} className="text-primary hover:text-primary">
                         <Edit2 className="w-4 h-4" />
                       </button>
-                      {user.is_active ? (
-                        <button onClick={() => setDeactivateId(user.id)} className="text-destructive hover:text-red-900">
-                          <UserX className="w-4 h-4" />
-                        </button>
-                      ) : (
-                        <button disabled className="text-gray-300 cursor-not-allowed">
-                          <UserX className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button onClick={() => setDeleteId(user.id)} className="text-destructive hover:text-red-900">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -248,17 +242,17 @@ export default function Users() {
         </Table>
       </div>
 
-      <AlertDialog open={!!deactivateId} onOpenChange={(open) => !open && setDeactivateId(null)}>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate User</AlertDialogTitle>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate this user account?
+              Are you sure you want to permanently delete this user account and all their associated data? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeactivate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Deactivate</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

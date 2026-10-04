@@ -78,3 +78,8 @@ export const getClassByDailyChangeId = async (id: number): Promise<number | null
   const [rows] = await pool.query('SELECT class_id FROM daily_timetable_changes WHERE id = ?', [id]);
   return (rows as any[])[0]?.class_id || null;
 };
+
+export const getStudentIdByUserId = async (userId: number): Promise<number | null> => {
+  const [rows] = await pool.query('SELECT id FROM students WHERE user_id = ?', [userId]);
+  return (rows as any[])[0]?.id || null;
+};

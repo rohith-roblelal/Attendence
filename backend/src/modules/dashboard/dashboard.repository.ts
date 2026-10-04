@@ -1,57 +1,61 @@
 import { pool } from '../../db/pool';
 
 export const getAdministrationStats = async () => {
-  const [counts] = await pool.query(`
-    SELECT
-      (SELECT name FROM academic_years WHERE is_active = TRUE LIMIT 1) as academic_year,
-      (SELECT COUNT(*) FROM departments) as departments,
-      (SELECT COUNT(*) FROM classes WHERE is_active = TRUE) as active_classes,
-      (SELECT COUNT(*) FROM students WHERE status = 'ACTIVE') as active_students,
-      (SELECT COUNT(*) FROM teachers WHERE status = 'ACTIVE') as active_teachers,
-      (SELECT COUNT(*) FROM department_hod_assignments WHERE is_active = TRUE) as active_hods,
-      (SELECT COUNT(*) FROM tutor_assignments WHERE is_active = TRUE) as active_tutors,
-      (SELECT COUNT(*) FROM users WHERE role_id = (SELECT id FROM roles WHERE name = 'ADMINISTRATION')) as admins,
-      (SELECT COUNT(*) FROM users WHERE is_active = FALSE) as inactive_users
-  `);
-  
-  const [attendance] = await pool.query(`
-    SELECT 
-      COUNT(a.id) as total_overall,
-      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_overall,
-      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() THEN 1 ELSE 0 END), 0) as total_today,
-      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_today,
-      COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'ABSENT' THEN 1 ELSE 0 END), 0) as absent_today
-    FROM attendance_records a
-    JOIN class_sessions cs ON a.class_session_id = cs.id
-    WHERE cs.status = 'CONDUCTED'
-  `);
+  const [countsResult, attendanceResult, atRiskListResult, missedClassesListResult] = await Promise.all([
+    pool.query(`
+      SELECT
+        (SELECT name FROM academic_years WHERE is_active = TRUE LIMIT 1) as academic_year,
+        (SELECT COUNT(*) FROM departments) as departments,
+        (SELECT COUNT(*) FROM classes WHERE is_active = TRUE) as active_classes,
+        (SELECT COUNT(*) FROM students WHERE status = 'ACTIVE') as active_students,
+        (SELECT COUNT(*) FROM teachers WHERE status = 'ACTIVE') as active_teachers,
+        (SELECT COUNT(*) FROM department_hod_assignments WHERE is_active = TRUE) as active_hods,
+        (SELECT COUNT(*) FROM tutor_assignments WHERE is_active = TRUE) as active_tutors,
+        (SELECT COUNT(*) FROM users WHERE role_id = (SELECT id FROM roles WHERE name = 'ADMINISTRATION')) as admins,
+        (SELECT COUNT(*) FROM users WHERE is_active = FALSE) as inactive_users
+    `),
+    pool.query(`
+      SELECT 
+        COUNT(a.id) as total_overall,
+        COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_overall,
+        COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() THEN 1 ELSE 0 END), 0) as total_today,
+        COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_today,
+        COALESCE(SUM(CASE WHEN cs.session_date = CURDATE() AND a.status = 'ABSENT' THEN 1 ELSE 0 END), 0) as absent_today
+      FROM attendance_records a
+      JOIN class_sessions cs ON a.class_session_id = cs.id
+      WHERE cs.status = 'CONDUCTED'
+    `),
+    pool.query(`
+      SELECT 
+        st.student_id as admission_number, 
+        CONCAT(st.first_name, ' ', COALESCE(st.last_name, '')) as student_name, 
+        COUNT(a.id) as total_sessions, 
+        SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions
+      FROM attendance_records a
+      JOIN class_sessions cs ON a.class_session_id = cs.id
+      JOIN students st ON a.student_id = st.id
+      WHERE cs.status = 'CONDUCTED'
+      GROUP BY st.id, st.student_id, st.first_name, st.last_name
+      HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
+      ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
+      LIMIT 15
+    `),
+    pool.query(`
+      SELECT c.class_code, c.section_name, s.name as semester_name, b.batch_name, b.department_id
+      FROM classes c
+      JOIN semesters s ON c.semester_id = s.id
+      JOIN admission_batches b ON c.admission_batch_id = b.id
+      WHERE c.is_active = TRUE 
+      AND c.id NOT IN (
+        SELECT DISTINCT class_id FROM class_sessions WHERE session_date = CURDATE() AND status = 'CONDUCTED'
+      )
+    `)
+  ]);
 
-  const [atRiskList] = await pool.query(`
-    SELECT 
-      st.student_id as admission_number, 
-      CONCAT(st.first_name, ' ', COALESCE(st.last_name, '')) as student_name, 
-      COUNT(a.id) as total_sessions, 
-      SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions
-    FROM attendance_records a
-    JOIN class_sessions cs ON a.class_session_id = cs.id
-    JOIN students st ON a.student_id = st.id
-    WHERE cs.status = 'CONDUCTED'
-    GROUP BY st.id, st.student_id, st.first_name, st.last_name
-    HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
-    ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
-    LIMIT 15
-  `);
-
-  const [missedClassesList] = await pool.query(`
-    SELECT c.class_code, c.section_name, s.name as semester_name, b.batch_name, b.department_id
-    FROM classes c
-    JOIN semesters s ON c.semester_id = s.id
-    JOIN admission_batches b ON c.admission_batch_id = b.id
-    WHERE c.is_active = TRUE 
-    AND c.id NOT IN (
-      SELECT DISTINCT class_id FROM class_sessions WHERE session_date = CURDATE() AND status = 'CONDUCTED'
-    )
-  `);
+  const [counts] = countsResult;
+  const [attendance] = attendanceResult;
+  const [atRiskList] = atRiskListResult;
+  const [missedClassesList] = missedClassesListResult;
 
   const attRow = (attendance as any[])[0];
   const totalOverall = Number(attRow.total_overall);
@@ -85,68 +89,71 @@ export const getAdministrationStats = async () => {
 };
 
 export const getHodStats = async (departmentId: number, academicYearId: number) => {
-  // Get Context
-  const [contextRows] = await pool.query(
-    'SELECT d.name as department_name, a.name as academic_year_name FROM departments d, academic_years a WHERE d.id = ? AND a.id = ?',
-    [departmentId, academicYearId]
-  );
+  const [contextRowsResult, countsResult, attendanceResult, classesResult, attentionResult, allAcademicYearsResult] = await Promise.all([
+    pool.query(
+      'SELECT d.name as department_name, a.name as academic_year_name FROM departments d, academic_years a WHERE d.id = ? AND a.id = ?',
+      [departmentId, academicYearId]
+    ),
+    pool.query(`
+      SELECT
+        (SELECT COUNT(c.id) FROM classes c JOIN semesters s ON c.semester_id = s.id JOIN admission_batches b ON c.admission_batch_id = b.id WHERE b.department_id = ? AND s.academic_year_id = ? AND c.is_active = TRUE) as active_classes,
+        (SELECT COUNT(st.id) FROM students st JOIN student_enrollments se ON st.id = se.student_id JOIN classes c ON se.class_id = c.id JOIN semesters s ON c.semester_id = s.id JOIN admission_batches b ON c.admission_batch_id = b.id WHERE b.department_id = ? AND s.academic_year_id = ? AND st.status = 'ACTIVE' AND se.status = 'ACTIVE') as active_students,
+        (SELECT COUNT(t.id) FROM teachers t WHERE t.department_id = ? AND t.status = 'ACTIVE') as active_teachers
+    `, [departmentId, academicYearId, departmentId, academicYearId, departmentId]),
+    pool.query(`
+      SELECT 
+        COUNT(a.id) as total_records,
+        COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
+      FROM attendance_records a
+      JOIN class_sessions cs ON a.class_session_id = cs.id
+      JOIN classes c ON cs.class_id = c.id
+      JOIN semesters s ON c.semester_id = s.id
+      JOIN admission_batches b ON c.admission_batch_id = b.id
+      WHERE cs.status = 'CONDUCTED' AND b.department_id = ? AND s.academic_year_id = ?
+    `, [departmentId, academicYearId]),
+    pool.query(`
+      SELECT 
+        c.id, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as name,
+        (SELECT COUNT(*) FROM student_enrollments se WHERE se.class_id = c.id AND se.status = 'ACTIVE') as student_count,
+        COUNT(a.id) as total_records,
+        COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
+      FROM classes c
+      JOIN semesters s ON c.semester_id = s.id
+      JOIN admission_batches b ON c.admission_batch_id = b.id
+      LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
+      LEFT JOIN attendance_records a ON a.class_session_id = cs.id
+      WHERE b.department_id = ? AND s.academic_year_id = ? AND c.is_active = TRUE
+      GROUP BY c.id, b.batch_name, s.name, c.section_name
+      ORDER BY b.batch_name ASC, s.name ASC, c.section_name ASC
+    `, [departmentId, academicYearId]),
+    pool.query(`
+      SELECT 
+        st.id, st.first_name, st.last_name, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as class_name,
+        COUNT(a.id) as total_records,
+        COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
+      FROM students st
+      JOIN student_enrollments se ON st.id = se.student_id AND se.status = 'ACTIVE'
+      JOIN classes c ON se.class_id = c.id
+      JOIN semesters s ON c.semester_id = s.id
+      JOIN admission_batches b ON c.admission_batch_id = b.id
+      JOIN attendance_records a ON a.student_id = st.id
+      JOIN class_sessions cs ON a.class_session_id = cs.id AND cs.status = 'CONDUCTED'
+      WHERE b.department_id = ? AND s.academic_year_id = ? AND st.status = 'ACTIVE'
+      GROUP BY st.id, st.first_name, st.last_name, class_name
+      HAVING total_records > 0 AND (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
+      ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
+      LIMIT 10
+    `, [departmentId, academicYearId]),
+    pool.query('SELECT id, name FROM academic_years ORDER BY id DESC')
+  ]);
+
+  const [contextRows] = contextRowsResult;
   const context = (contextRows as any[])[0];
-
-  const [counts] = await pool.query(`
-    SELECT
-      (SELECT COUNT(c.id) FROM classes c JOIN semesters s ON c.semester_id = s.id JOIN admission_batches b ON c.admission_batch_id = b.id WHERE b.department_id = ? AND s.academic_year_id = ? AND c.is_active = TRUE) as active_classes,
-      (SELECT COUNT(st.id) FROM students st JOIN student_enrollments se ON st.id = se.student_id JOIN classes c ON se.class_id = c.id JOIN semesters s ON c.semester_id = s.id JOIN admission_batches b ON c.admission_batch_id = b.id WHERE b.department_id = ? AND s.academic_year_id = ? AND st.status = 'ACTIVE' AND se.status = 'ACTIVE') as active_students,
-      (SELECT COUNT(t.id) FROM teachers t WHERE t.department_id = ? AND t.status = 'ACTIVE') as active_teachers
-  `, [departmentId, academicYearId, departmentId, academicYearId, departmentId]);
-  
-  const [attendance] = await pool.query(`
-    SELECT 
-      COUNT(a.id) as total_records,
-      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
-    FROM attendance_records a
-    JOIN class_sessions cs ON a.class_session_id = cs.id
-    JOIN classes c ON cs.class_id = c.id
-    JOIN semesters s ON c.semester_id = s.id
-    JOIN admission_batches b ON c.admission_batch_id = b.id
-    WHERE cs.status = 'CONDUCTED' AND b.department_id = ? AND s.academic_year_id = ?
-  `, [departmentId, academicYearId]);
-
-  const [classes] = await pool.query(`
-    SELECT 
-      c.id, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as name,
-      (SELECT COUNT(*) FROM student_enrollments se WHERE se.class_id = c.id AND se.status = 'ACTIVE') as student_count,
-      COUNT(a.id) as total_records,
-      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
-    FROM classes c
-    JOIN semesters s ON c.semester_id = s.id
-    JOIN admission_batches b ON c.admission_batch_id = b.id
-    LEFT JOIN class_sessions cs ON cs.class_id = c.id AND cs.status = 'CONDUCTED'
-    LEFT JOIN attendance_records a ON a.class_session_id = cs.id
-    WHERE b.department_id = ? AND s.academic_year_id = ? AND c.is_active = TRUE
-    GROUP BY c.id, b.batch_name, s.name, c.section_name
-    ORDER BY b.batch_name ASC, s.name ASC, c.section_name ASC
-  `, [departmentId, academicYearId]);
-
-  const [attention] = await pool.query(`
-    SELECT 
-      st.id, st.first_name, st.last_name, CONCAT(b.batch_name, ' - ', s.name, ' - ', c.section_name) as class_name,
-      COUNT(a.id) as total_records,
-      COALESCE(SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END), 0) as present_records
-    FROM students st
-    JOIN student_enrollments se ON st.id = se.student_id AND se.status = 'ACTIVE'
-    JOIN classes c ON se.class_id = c.id
-    JOIN semesters s ON c.semester_id = s.id
-    JOIN admission_batches b ON c.admission_batch_id = b.id
-    JOIN attendance_records a ON a.student_id = st.id
-    JOIN class_sessions cs ON a.class_session_id = cs.id AND cs.status = 'CONDUCTED'
-    WHERE b.department_id = ? AND s.academic_year_id = ? AND st.status = 'ACTIVE'
-    GROUP BY st.id, st.first_name, st.last_name, class_name
-    HAVING total_records > 0 AND (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
-    ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
-    LIMIT 10
-  `, [departmentId, academicYearId]);
-
-  const [allAcademicYears] = await pool.query('SELECT id, name FROM academic_years ORDER BY id DESC');
+  const [counts] = countsResult;
+  const [attendance] = attendanceResult;
+  const [classes] = classesResult;
+  const [attention] = attentionResult;
+  const [allAcademicYears] = allAcademicYearsResult;
 
   return {
     context: context,

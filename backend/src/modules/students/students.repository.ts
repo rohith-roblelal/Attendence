@@ -1,8 +1,7 @@
 import { pool } from '../../db/pool';
 
 export const getStudents = async (filters: any) => {
-  let query = `
-    SELECT s.*, u.username, u.email, se.class_id as current_class_id
+  let baseQuery = `
     FROM students s
     JOIN users u ON s.user_id = u.id
     LEFT JOIN student_enrollments se ON se.student_id = s.id AND se.status = 'ACTIVE'
@@ -11,22 +10,49 @@ export const getStudents = async (filters: any) => {
   const values: any[] = [];
   
   if (filters.status) {
-    query += ' AND s.status = ?';
+    baseQuery += ' AND s.status = ?';
     values.push(filters.status);
   }
   if (filters.user_id) {
-    query += ' AND s.user_id = ?';
+    baseQuery += ' AND s.user_id = ?';
     values.push(filters.user_id);
   }
   // Filter students enrolled in a specific class (used by AttendanceTracker)
   if (filters.class_id) {
-    query += ' AND se.class_id = ?';
+    baseQuery += ' AND se.class_id = ?';
     values.push(filters.class_id);
   }
   
-  query += ' ORDER BY CAST(s.student_id AS UNSIGNED) ASC, s.student_id ASC';
+  // Pagination logic
+  const page = filters.page ? parseInt(filters.page, 10) : 1;
+  const limit = filters.limit ? parseInt(filters.limit, 10) : 0; // 0 means no pagination
+
+  let query = `SELECT s.*, u.username, u.email, se.class_id as current_class_id ${baseQuery} ORDER BY CAST(s.student_id AS UNSIGNED) ASC, s.student_id ASC`;
+  let total = 0;
+
+  if (limit > 0) {
+    const offset = (page - 1) * limit;
+    const [countRows] = await pool.query(`SELECT COUNT(*) as total ${baseQuery}`, values);
+    total = (countRows as any[])[0].total;
+    
+    query += ` LIMIT ? OFFSET ?`;
+    values.push(limit, offset);
+  } else {
+    // If no pagination requested, total is just the length of the result array
+  }
+
   const [rows] = await pool.query(query, values);
-  return rows;
+  if (limit === 0) total = (rows as any[]).length;
+
+  return {
+    data: rows,
+    meta: {
+      total,
+      page,
+      limit: limit > 0 ? limit : total,
+      totalPages: limit > 0 ? Math.ceil(total / limit) : 1
+    }
+  };
 };
 
 export const getStudentById = async (id: number) => {

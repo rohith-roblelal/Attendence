@@ -12,6 +12,7 @@ import { teachersApi } from '../../lib/api/teachers';
 import { apiClient } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { Edit2, XCircle } from 'lucide-react';
+import React from 'react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,12 @@ export default function ClassSessions() {
   const [cancelId, setCancelId] = useState<number | null>(null);
 
   const [selectedClassId, setSelectedClassId] = useState<number>(0);
+
+  // Performance Optimization: Memoize lookups
+  const classesMap = React.useMemo(() => new Map(classes.map(c => [c.id, c])), [classes]);
+  const classSubjectsMap = React.useMemo(() => new Map(classSubjects.map(cs => [cs.id, cs])), [classSubjects]);
+  const subjectsMap = React.useMemo(() => new Map(subjects.map(s => [s.id, s])), [subjects]);
+  const teachersMap = React.useMemo(() => new Map(teachers.map(t => [t.id, t])), [teachers]);
 
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<any>({
     resolver: zodResolver(isEditing ? updateSessionSchema : createSessionSchema),
@@ -195,10 +202,10 @@ export default function ClassSessions() {
     : classSubjects.filter(cs => cs.is_active);
 
   const getSubjectDisplay = (csId: number) => {
-    const cs = classSubjects.find(c => c.id === csId);
+    const cs = classSubjectsMap.get(csId);
     if (!cs) return 'Unknown Subject';
-    const sub = subjects.find(s => s.id === cs.subject_id);
-    const teacher = teachers.find(t => t.id === cs.teacher_id);
+    const sub = subjectsMap.get(cs.subject_id);
+    const teacher = teachersMap.get(cs.teacher_id);
     return `${sub?.name} (Permanent: ${teacher ? teacher.first_name : 'None'})`;
   };
 
@@ -326,11 +333,11 @@ export default function ClassSessions() {
                 if (dateDiff !== 0) return dateDiff;
                 return a.period_number - b.period_number;
               }).map(session => {
-                const cls = classes.find(c => c.id === session.class_id);
-                const cs = classSubjects.find(c => c.id === session.class_subject_id);
-                const sub = cs ? subjects.find(s => s.id === cs.subject_id) : null;
-                const permanentTeacher = cs ? teachers.find(t => t.id === cs.teacher_id) : null;
-                const conductedTeacher = session.conducted_by_teacher_id ? teachers.find(t => t.id === session.conducted_by_teacher_id) : permanentTeacher;
+                const cls = classesMap.get(session.class_id);
+                const cs = classSubjectsMap.get(session.class_subject_id);
+                const sub = cs ? subjectsMap.get(cs.subject_id) : null;
+                const permanentTeacher = cs ? teachersMap.get(cs.teacher_id) : null;
+                const conductedTeacher = session.conducted_by_teacher_id ? teachersMap.get(session.conducted_by_teacher_id) : permanentTeacher;
 
                 return (
                   <TableRow key={session.id}>
@@ -358,11 +365,11 @@ export default function ClassSessions() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-3">
-                        <button onClick={() => editSession(session)} className="text-primary hover:text-primary">
+                        <button onClick={() => editSession(session)} className="text-primary hover:text-primary" aria-label="Edit Session" title="Edit Session">
                           <Edit2 className="w-4 h-4" />
                         </button>
                         {session.status !== 'CANCELLED' ? (
-                          <button onClick={() => setCancelId(session.id)} className="text-destructive hover:text-red-900" title="Cancel Session">
+                          <button onClick={() => setCancelId(session.id)} className="text-destructive hover:text-red-900" title="Cancel Session" aria-label="Cancel Session">
                             <XCircle className="w-4 h-4" />
                           </button>
                         ) : (

@@ -5,7 +5,6 @@ import { env } from '../../config/env';
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { username, password } = req.body;
-    console.log('LOGIN ATTEMPT:', { username, passwordLength: password?.length });
     const { user, token } = await authService.login(username, password);
 
     // Set HttpOnly cookie
@@ -37,9 +36,11 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     
     let payload;
     try {
-      payload = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+      // Security fix: Do not ignore expiration for sliding session. 
+      // Only active, unexpired tokens can be refreshed.
+      payload = jwt.verify(token, JWT_SECRET);
     } catch (e) {
-      return res.status(401).json({ status: 'error', message: 'Invalid token' });
+      return res.status(401).json({ status: 'error', message: 'Invalid or expired token' });
     }
 
     const newPayload = { id: payload.id, username: payload.username, role: payload.role };

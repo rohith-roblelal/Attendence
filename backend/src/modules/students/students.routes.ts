@@ -6,13 +6,15 @@ import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
 import * as attendanceCtrl from '../attendance/attendance.controller';
 
+import { authorizeScope } from '../../middleware/authorizeScope';
+
 const router = Router();
 router.use(authenticate);
 
 // Read routes
 router.get('/', ctrl.getAll);
-router.get('/:id', validateRequest(schemas.idParamSchema), ctrl.getById);
-router.get('/:id/attendance', validateRequest(schemas.idParamSchema), (req: any, res: any, next: any) => {
+router.get('/:id', validateRequest(schemas.idParamSchema), authorizeScope('STUDENT'), ctrl.getById);
+router.get('/:id/attendance', validateRequest(schemas.idParamSchema), authorizeScope('STUDENT'), (req: any, res: any, next: any) => {
   req.params.studentId = req.params.id;
   attendanceCtrl.getStudentSummary(req, res, next);
 });

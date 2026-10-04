@@ -1,0 +1,724 @@
+{
+  "academic_holidays": [],
+  "academic_years": [
+    {
+      "id": 1,
+      "name": "2025-29",
+      "start_date": "2025-08-12T18:30:00.000Z",
+      "end_date": "2030-05-30T18:30:00.000Z",
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-03T10:42:14.000Z"
+    }
+  ],
+  "admission_batches": [
+    {
+      "id": 1,
+      "academic_year_id": 1,
+      "department_id": 1,
+      "specialization_id": null,
+      "batch_name": "CS2026",
+      "admission_year": 2026,
+      "created_at": "2026-10-02T02:31:01.000Z"
+    }
+  ],
+  "attendance_audit_logs": [],
+  "attendance_records": [],
+  "audit_logs": [],
+  "class_sessions": [
+    {
+      "id": 1,
+      "class_id": 1,
+      "class_subject_id": 1,
+      "session_date": "2025-12-31T18:30:00.000Z",
+      "period_number": 1,
+      "assigned_teacher_id": 1,
+      "conducted_by_teacher_id": 1,
+      "contact_hours": "1.00",
+      "status": "CONDUCTED",
+      "source": "REGULAR",
+      "created_at": "2026-10-02T02:31:02.000Z",
+      "updated_at": "2026-10-02T02:31:02.000Z"
+    },
+    {
+      "id": 2,
+      "class_id": 1,
+      "class_subject_id": 2,
+      "session_date": "2025-12-31T18:30:00.000Z",
+      "period_number": 2,
+      "assigned_teacher_id": 2,
+      "conducted_by_teacher_id": 2,
+      "contact_hours": "1.00",
+      "status": "CONDUCTED",
+      "source": "REGULAR",
+      "created_at": "2026-10-02T02:31:02.000Z",
+      "updated_at": "2026-10-02T02:31:02.000Z"
+    }
+  ],
+  "class_subjects": [
+    {
+      "id": 1,
+      "class_id": 1,
+      "subject_id": 1,
+      "teacher_id": 1,
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:02.000Z",
+      "updated_at": "2026-10-02T02:31:02.000Z"
+    },
+    {
+      "id": 2,
+      "class_id": 1,
+      "subject_id": 2,
+      "teacher_id": 2,
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:02.000Z",
+      "updated_at": "2026-10-02T02:31:02.000Z"
+    }
+  ],
+  "classes": [
+    {
+      "id": 1,
+      "admission_batch_id": 1,
+      "semester_id": 1,
+      "section_name": "A",
+      "class_code": "CS-A",
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    }
+  ],
+  "daily_timetable_changes": [],
+  "department_hod_assignments": [
+    {
+      "id": 1,
+      "department_id": 1,
+      "teacher_id": 4,
+      "academic_year_id": 1,
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": null,
+      "is_active": 1,
+      "created_at": "2026-09-30T12:51:28.000Z"
+    },
+    {
+      "id": 2,
+      "department_id": 1,
+      "teacher_id": 1,
+      "academic_year_id": 1,
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:02.000Z"
+    }
+  ],
+  "departments": [
+    {
+      "id": 1,
+      "code": "CSE",
+      "name": "COMPUTER SCIENCE AND ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-03T10:42:25.000Z"
+    },
+    {
+      "id": 2,
+      "code": "AS",
+      "name": "Applied Science",
+      "description": "Department of Applied Science",
+      "is_active": 1,
+      "created_at": null,
+      "updated_at": null
+    },
+    {
+      "id": 3,
+      "code": "ME",
+      "name": "MECHANICAL ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-03T10:42:40.000Z",
+      "updated_at": "2026-10-03T10:42:40.000Z"
+    },
+    {
+      "id": 4,
+      "code": "ICE",
+      "name": "INSTRUMENTATION AND CONTROL ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-03T10:43:13.000Z",
+      "updated_at": "2026-10-03T10:43:13.000Z"
+    },
+    {
+      "id": 5,
+      "code": "CE",
+      "name": "CIVIL ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-03T10:43:25.000Z",
+      "updated_at": "2026-10-03T10:43:25.000Z"
+    },
+    {
+      "id": 6,
+      "code": "ECE",
+      "name": "ELECTRONICS AND COMMUNICATION ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-03T10:43:58.000Z",
+      "updated_at": "2026-10-03T10:43:58.000Z"
+    },
+    {
+      "id": 7,
+      "code": "EEE",
+      "name": "ELECTRIC AND ELECTRONICS ENGINEERING",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-03T10:44:28.000Z",
+      "updated_at": "2026-10-03T10:44:28.000Z"
+    }
+  ],
+  "regular_timetable_entries": [
+    {
+      "id": 1,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 1,
+      "class_subject_id": 3,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:48:46.000Z",
+      "updated_at": "2026-10-02T00:48:46.000Z"
+    },
+    {
+      "id": 2,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 2,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:48:57.000Z",
+      "updated_at": "2026-10-02T00:48:57.000Z"
+    },
+    {
+      "id": 3,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 3,
+      "class_subject_id": 7,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:49:10.000Z",
+      "updated_at": "2026-10-02T00:49:10.000Z"
+    },
+    {
+      "id": 4,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 4,
+      "class_subject_id": 4,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:49:25.000Z",
+      "updated_at": "2026-10-02T00:49:25.000Z"
+    },
+    {
+      "id": 5,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 5,
+      "class_subject_id": 8,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:49:37.000Z",
+      "updated_at": "2026-10-02T00:49:37.000Z"
+    },
+    {
+      "id": 6,
+      "class_id": 2,
+      "day_of_week": 1,
+      "period_number": 6,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:50:13.000Z",
+      "updated_at": "2026-10-02T00:50:13.000Z"
+    },
+    {
+      "id": 7,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 1,
+      "class_subject_id": 4,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:50:23.000Z",
+      "updated_at": "2026-10-02T00:50:23.000Z"
+    },
+    {
+      "id": 8,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 2,
+      "class_subject_id": 8,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:50:37.000Z",
+      "updated_at": "2026-10-02T00:50:37.000Z"
+    },
+    {
+      "id": 9,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 3,
+      "class_subject_id": 3,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:50:50.000Z",
+      "updated_at": "2026-10-02T00:50:50.000Z"
+    },
+    {
+      "id": 10,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 4,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:51:11.000Z",
+      "updated_at": "2026-10-02T00:51:11.000Z"
+    },
+    {
+      "id": 11,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 5,
+      "class_subject_id": 5,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:51:39.000Z",
+      "updated_at": "2026-10-02T00:51:39.000Z"
+    },
+    {
+      "id": 12,
+      "class_id": 2,
+      "day_of_week": 2,
+      "period_number": 6,
+      "class_subject_id": 8,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:51:51.000Z",
+      "updated_at": "2026-10-02T00:51:51.000Z"
+    },
+    {
+      "id": 13,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 1,
+      "class_subject_id": 10,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:52:17.000Z",
+      "updated_at": "2026-10-02T00:52:17.000Z"
+    },
+    {
+      "id": 14,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 2,
+      "class_subject_id": 10,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:52:25.000Z",
+      "updated_at": "2026-10-02T00:52:25.000Z"
+    },
+    {
+      "id": 15,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 3,
+      "class_subject_id": 10,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:52:33.000Z",
+      "updated_at": "2026-10-02T00:52:33.000Z"
+    },
+    {
+      "id": 16,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 4,
+      "class_subject_id": 7,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:52:46.000Z",
+      "updated_at": "2026-10-02T00:52:46.000Z"
+    },
+    {
+      "id": 18,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 5,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:53:09.000Z",
+      "updated_at": "2026-10-02T00:53:09.000Z"
+    },
+    {
+      "id": 19,
+      "class_id": 2,
+      "day_of_week": 3,
+      "period_number": 6,
+      "class_subject_id": 4,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:53:20.000Z",
+      "updated_at": "2026-10-02T00:53:20.000Z"
+    },
+    {
+      "id": 20,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 1,
+      "class_subject_id": 7,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:53:33.000Z",
+      "updated_at": "2026-10-02T00:53:33.000Z"
+    },
+    {
+      "id": 21,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 2,
+      "class_subject_id": 4,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:53:54.000Z",
+      "updated_at": "2026-10-02T00:53:54.000Z"
+    },
+    {
+      "id": 22,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 3,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:54:35.000Z",
+      "updated_at": "2026-10-02T00:54:35.000Z"
+    },
+    {
+      "id": 23,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 4,
+      "class_subject_id": 8,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:54:50.000Z",
+      "updated_at": "2026-10-02T00:54:50.000Z"
+    },
+    {
+      "id": 24,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 5,
+      "class_subject_id": 3,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:55:12.000Z",
+      "updated_at": "2026-10-02T00:55:12.000Z"
+    },
+    {
+      "id": 25,
+      "class_id": 2,
+      "day_of_week": 4,
+      "period_number": 6,
+      "class_subject_id": 8,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:55:23.000Z",
+      "updated_at": "2026-10-02T00:55:23.000Z"
+    },
+    {
+      "id": 26,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 1,
+      "class_subject_id": 9,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:55:33.000Z",
+      "updated_at": "2026-10-02T00:55:33.000Z"
+    },
+    {
+      "id": 27,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 2,
+      "class_subject_id": 9,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:55:43.000Z",
+      "updated_at": "2026-10-02T00:55:43.000Z"
+    },
+    {
+      "id": 28,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 3,
+      "class_subject_id": 9,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:55:53.000Z",
+      "updated_at": "2026-10-02T00:55:53.000Z"
+    },
+    {
+      "id": 29,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 4,
+      "class_subject_id": 3,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:56:03.000Z",
+      "updated_at": "2026-10-02T00:56:03.000Z"
+    },
+    {
+      "id": 31,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 5,
+      "class_subject_id": 6,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:56:27.000Z",
+      "updated_at": "2026-10-02T00:56:27.000Z"
+    },
+    {
+      "id": 32,
+      "class_id": 2,
+      "day_of_week": 5,
+      "period_number": 6,
+      "class_subject_id": 5,
+      "is_active": 1,
+      "created_at": "2026-10-02T00:56:38.000Z",
+      "updated_at": "2026-10-02T00:56:38.000Z"
+    }
+  ],
+  "roles": [
+    {
+      "id": 1,
+      "name": "ADMINISTRATION",
+      "description": "Admin role",
+      "created_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 2,
+      "name": "TEACHER",
+      "description": "Teacher role",
+      "created_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 3,
+      "name": "STUDENT",
+      "description": "Student role",
+      "created_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 4,
+      "name": "HOD",
+      "description": "Head of Department",
+      "created_at": null
+    },
+    {
+      "id": 5,
+      "name": "TUTOR",
+      "description": "Class Tutor",
+      "created_at": null
+    }
+  ],
+  "semesters": [
+    {
+      "id": 1,
+      "academic_year_id": 1,
+      "semester_number": 1,
+      "name": "Sem 1",
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": "2026-05-31T18:30:00.000Z",
+      "created_at": "2026-10-02T02:31:01.000Z"
+    }
+  ],
+  "specializations": [
+    {
+      "id": 1,
+      "department_id": 1,
+      "code": "AI",
+      "name": "ARTIFICAL INTELEGENCE",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-09-30T12:06:13.000Z",
+      "updated_at": "2026-09-30T12:06:13.000Z"
+    },
+    {
+      "id": 2,
+      "department_id": 1,
+      "code": "CY",
+      "name": "CYBER SECURITY",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-09-30T12:06:30.000Z",
+      "updated_at": "2026-09-30T12:06:30.000Z"
+    },
+    {
+      "id": 3,
+      "department_id": 1,
+      "code": "CS",
+      "name": "COMPUTER SCIENCE",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-09-30T12:06:59.000Z",
+      "updated_at": "2026-09-30T12:06:59.000Z"
+    }
+  ],
+  "student_enrollments": [
+    {
+      "id": 1,
+      "student_id": 1,
+      "class_id": 1,
+      "start_date": "2025-12-31T18:30:00.000Z",
+      "end_date": null,
+      "status": "ACTIVE",
+      "transfer_reason": null,
+      "created_at": "2026-10-02T02:31:02.000Z"
+    }
+  ],
+  "students": [
+    {
+      "id": 1,
+      "user_id": 4,
+      "student_id": "S001",
+      "first_name": "Student",
+      "last_name": "A",
+      "date_of_birth": null,
+      "admission_number": null,
+      "joined_at": null,
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T02:31:02.000Z",
+      "updated_at": "2026-10-02T02:31:02.000Z"
+    }
+  ],
+  "subjects": [
+    {
+      "id": 1,
+      "code": "M1",
+      "name": "Math",
+      "subject_type": "THEORY",
+      "default_contact_hours": "1.00",
+      "credits": "3.00",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 2,
+      "code": "P1",
+      "name": "Physics",
+      "subject_type": "THEORY",
+      "default_contact_hours": "1.00",
+      "credits": "3.00",
+      "description": null,
+      "is_active": 1,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    }
+  ],
+  "system_settings": [
+    {
+      "id": 1,
+      "setting_key": "required_attendance_percentage",
+      "setting_value": "75.00",
+      "description": "Global required attendance percentage",
+      "updated_at": "2026-09-28T09:15:41.000Z"
+    }
+  ],
+  "teachers": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "teacher_id": "T001",
+      "first_name": "Teacher",
+      "last_name": "A",
+      "designation": null,
+      "joined_at": null,
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "teacher_id": "T002",
+      "first_name": "Teacher",
+      "last_name": "B",
+      "designation": null,
+      "joined_at": null,
+      "status": "ACTIVE",
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    }
+  ],
+  "timetable_swaps": [
+    {
+      "id": 1,
+      "requesting_teacher_id": 5,
+      "target_teacher_id": 7,
+      "swap_date": "2026-07-16T18:30:00.000Z",
+      "requesting_class_subject_id": 3,
+      "requesting_period_number": 1,
+      "target_class_subject_id": 9,
+      "target_period_number": 1,
+      "status": "PENDING",
+      "created_at": "2026-10-02T01:59:35.000Z",
+      "updated_at": "2026-10-02T01:59:35.000Z"
+    }
+  ],
+  "tutor_assignments": [
+    {
+      "id": 1,
+      "class_id": 2,
+      "teacher_id": 3,
+      "start_date": "2026-06-30T18:30:00.000Z",
+      "end_date": null,
+      "is_active": 1,
+      "assigned_by": 1,
+      "created_at": "2026-09-30T12:50:09.000Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "role_id": 1,
+      "username": "admin",
+      "password_hash": "$argon2id$v=19$m=65536,p=4,t=3$KP1s2CBXARAJlZnFeVUUdg$wxZ71/tfo6RnknRaqoDRqQ2C4M/sX0y+ZarEq2i8huM",
+      "email": null,
+      "phone": null,
+      "is_active": 1,
+      "last_login_at": null,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 2,
+      "role_id": 2,
+      "username": "teacher_a",
+      "password_hash": "$argon2id$v=19$m=65536,p=4,t=3$KP1s2CBXARAJlZnFeVUUdg$wxZ71/tfo6RnknRaqoDRqQ2C4M/sX0y+ZarEq2i8huM",
+      "email": null,
+      "phone": null,
+      "is_active": 1,
+      "last_login_at": null,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 3,
+      "role_id": 2,
+      "username": "teacher_b",
+      "password_hash": "$argon2id$v=19$m=65536,p=4,t=3$KP1s2CBXARAJlZnFeVUUdg$wxZ71/tfo6RnknRaqoDRqQ2C4M/sX0y+ZarEq2i8huM",
+      "email": null,
+      "phone": null,
+      "is_active": 1,
+      "last_login_at": null,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    },
+    {
+      "id": 4,
+      "role_id": 3,
+      "username": "student_a",
+      "password_hash": "$argon2id$v=19$m=65536,p=4,t=3$KP1s2CBXARAJlZnFeVUUdg$wxZ71/tfo6RnknRaqoDRqQ2C4M/sX0y+ZarEq2i8huM",
+      "email": null,
+      "phone": null,
+      "is_active": 1,
+      "last_login_at": null,
+      "created_at": "2026-10-02T02:31:01.000Z",
+      "updated_at": "2026-10-02T02:31:01.000Z"
+    }
+  ]
+}

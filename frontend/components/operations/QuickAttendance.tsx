@@ -10,6 +10,7 @@ import { studentsApi } from '../../lib/api/students';
 import { attendanceApi } from '../../lib/api/attendance';
 import { apiClient } from '../../lib/api/client';
 import { useAuth } from '../../lib/auth/AuthContext';
+import React from 'react';
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,20 @@ export default function QuickAttendance() {
 
   // local state for marking attendance
   const [attendanceMarks, setAttendanceMarks] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
+
+  // Performance Optimization: Memoize subject lookups to prevent O(N^2) renders
+  const subjectsMap = React.useMemo(() => {
+    const map = new Map<number, string>();
+    subjects.forEach(s => map.set(s.id, s.name));
+    return map;
+  }, [subjects]);
+
+  // Performance Optimization: Memoize attendance lookups
+  const existingAttendanceMap = React.useMemo(() => {
+    const map = new Map<number, any>();
+    existingAttendance.forEach(a => map.set(a.student_id, a));
+    return map;
+  }, [existingAttendance]);
 
   const fetchBaseData = async () => {
     setLoadingData(true);
@@ -231,10 +246,12 @@ export default function QuickAttendance() {
     }
   };
 
-  const availableClassSubjects = classSubjects.filter(cs => cs.class_id === selectedClassId && cs.is_active);
+  const availableClassSubjects = React.useMemo(() => 
+    classSubjects.filter(cs => cs.class_id === selectedClassId && cs.is_active),
+  [classSubjects, selectedClassId]);
 
   const getSubjectName = (subjectId: number) => {
-    return subjects.find(s => s.id === subjectId)?.name || 'Unknown Subject';
+    return subjectsMap.get(subjectId) || 'Unknown Subject';
   };
 
   if (loadingData) return <div className="p-4 text-muted-foreground">Loading foundational data...</div>;
@@ -378,7 +395,7 @@ export default function QuickAttendance() {
                 <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No students enrolled in this class.</TableCell></TableRow>
               ) : (
                 students.map(student => {
-                  const existing = existingAttendance.find(a => a.student_id === student.id);
+                  const existing = existingAttendanceMap.get(student.id);
                   const currentMark = attendanceMarks[student.id];
 
                   return (

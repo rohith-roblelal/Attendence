@@ -61,9 +61,10 @@ export default function HodPage() {
     fetchData();
   }, []);
 
-  const entries = data ? Object.entries(data) : [];
-  const kpis = entries.filter(([, v]) => !Array.isArray(v));
-  const lists = entries.filter(([, v]) => Array.isArray(v) && (v as any[]).length >= 0) as [string, any[]][];
+  const entries = React.useMemo(() => data ? Object.entries(data) : [], [data]);
+  const kpis = React.useMemo(() => entries.filter(([, v]) => !Array.isArray(v)), [entries]);
+  const lists = React.useMemo(() => entries.filter(([, v]) => Array.isArray(v) && (v as any[]).length >= 0) as [string, any[]][], [entries]);
+  
   const activeTab = tab || lists[0]?.[0] || '';
 
   const departmentName = data?.department_name || data?.department;
