@@ -211,6 +211,17 @@ The planned Flutter application will consume the existing backend API rather tha
 * [ ] Flutter mobile application
 * [ ] Production-scale cloud database
 
+## 📚 Documentation
+
+Detailed technical documentation and phase reports are available in the `doc/` directory:
+* **[Project Tracker](doc/project_tracker.md)** - Comprehensive phase-by-phase project milestones.
+* **[Database Design](doc/Database_Design.md)** - Detailed MySQL schema and architecture.
+* **[Architecture Overview](doc/Architecture.md)** - System design and technical stack.
+* **[Phase 4 Automated E2E & Regression](doc/phase_4_automated_e2e_regression_report.md)** - API regression and security testing framework.
+* **[Phase 4.2 Browser E2E](doc/phase_4_2_browser_e2e_report.md)** - Full Playwright browser regression test suite.
+* **[Phase 5 Production Hardening](doc/phase_5_production_hardening_report.md)** - Configuration, rate limiting, and environment hardening.
+* **[Phase 6 Migration Planning](doc/phase_6_migration_planning.md)** - Production architecture and XAMPP migration runbook.
+
 ## 🎯 Vision
 
 Build a complete digital attendance ecosystem that is:
