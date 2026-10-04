@@ -13,7 +13,7 @@ export const pool = mysql.createPool({
   queueLimit: 0,
   connectTimeout: 10000,
   idleTimeout: 60000,
-  // ssl: { rejectUnauthorized: false },
+   ssl: { rejectUnauthorized: false },
 });
 
 export const testConnection = async () => {
