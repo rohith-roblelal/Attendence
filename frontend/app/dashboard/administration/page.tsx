@@ -132,11 +132,11 @@ export default function AdministrationPage() {
   };
 
   // Any KPI the API returns that isn't listed above still shows up here.
-  const sections = React.useMemo(() => {
+  const sections = (() => {
     const knownKeys = SECTIONS.flatMap(s => s.keys);
     const otherKeys = Object.keys(kpis).filter(k => !knownKeys.includes(k));
     return otherKeys.length ? [...SECTIONS, { title: 'Other', keys: otherKeys }] : SECTIONS;
-  }, [kpis]);
+  })();
 
   const modules = [
     { href: '/dashboard/administration/academic', title: 'Academic Structure', desc: 'Manage years, departments, classes' },

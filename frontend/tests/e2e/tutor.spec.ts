@@ -16,8 +16,11 @@ test.describe('Tutor Browser Workflow', () => {
     // Tutor redirects to /dashboard/tutor
     await expect(page).toHaveURL(/.*\/dashboard\/tutor.*/);
 
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+    const heading = page.getByRole('heading', { name: /Tutor Dashboard/i, exact: false }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
+
+    const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+    await expect(logoutBtn).toBeVisible();
 
     const appErrors = errors.filter(e => !e.includes('Warning:') && !e.includes('hydrat'));
     expect(appErrors).toHaveLength(0);

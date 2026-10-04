@@ -1,0 +1,226 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: teacher.spec.ts >> Teacher Browser Workflow >> Teacher can execute full attendance workflow
+- Location: tests\e2e\teacher.spec.ts:85:7
+
+# Error details
+
+```
+Test timeout of 30000ms exceeded.
+```
+
+```
+Error: locator.selectOption: Test timeout of 30000ms exceeded.
+Call log:
+  - waiting for locator('select').first()
+    - locator resolved to <select class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">…</select>
+  - attempting select option action
+    2 × waiting for element to be visible and enabled
+      - did not find some options
+    - retrying select option action
+    - waiting 20ms
+    2 × waiting for element to be visible and enabled
+      - did not find some options
+    - retrying select option action
+      - waiting 100ms
+    55 × waiting for element to be visible and enabled
+       - did not find some options
+     - retrying select option action
+       - waiting 500ms
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - complementary [ref=f1e3]:
+      - heading "Welcome, phase4_teacher_a" [level=1] [ref=f1e5]
+      - navigation [ref=f1e6]:
+        - generic [ref=f1e7]:
+          - heading "TEACHING" [level=2] [ref=f1e8]
+          - link "Teacher Dashboard" [ref=f1e9] [cursor=pointer]:
+            - /url: /dashboard/teacher
+          - link "Take Attendance" [ref=f1e13] [cursor=pointer]:
+            - /url: /dashboard/teacher/take-attendance
+          - link "My Sessions" [ref=f1e18] [cursor=pointer]:
+            - /url: /dashboard/teacher/sessions
+          - link "Timetable" [ref=f1e22] [cursor=pointer]:
+            - /url: /dashboard/teacher/timetable
+          - link "Swap Requests" [ref=f1e25] [cursor=pointer]:
+            - /url: /dashboard/teacher/swaps
+      - generic [ref=f1e29]:
+        - generic [ref=f1e30]:
+          - generic [ref=f1e31]:
+            - generic [ref=f1e32]: p
+            - generic [ref=f1e33]:
+              - paragraph [ref=f1e34]: phase4_teacher_a
+              - paragraph [ref=f1e35]: TEACHER
+          - button "Toggle theme" [ref=f1e36]
+        - button "Logout" [ref=f1e38]
+    - main [ref=f1e39]:
+      - generic [ref=f1e41]:
+        - generic [ref=f1e42]:
+          - heading "Take Attendance" [level=1] [ref=f1e43]
+          - paragraph [ref=f1e44]: Quickly mark attendance for your current sessions.
+        - generic [ref=f1e45]:
+          - generic [ref=f1e46]: Failed to fetch foundational data
+          - generic [ref=f1e47]:
+            - generic [ref=f1e48]: Session Details
+            - generic [ref=f1e50]:
+              - generic [ref=f1e51]:
+                - generic [ref=f1e52]:
+                  - generic [ref=f1e53]: Class
+                  - combobox [ref=f1e54]:
+                    - option "Select Class..." [selected]
+                - generic [ref=f1e55]:
+                  - generic [ref=f1e56]: Subject
+                  - combobox [disabled] [ref=f1e57]:
+                    - option "Select Subject..." [selected]
+                - generic [ref=f1e58]:
+                  - generic [ref=f1e59]: Date
+                  - textbox [ref=f1e60]: 2026-10-04
+                - generic [ref=f1e61]:
+                  - generic [ref=f1e62]: Period/Hour
+                  - combobox [ref=f1e63]:
+                    - option "Hour 1" [selected]
+                    - option "Hour 2"
+                    - option "Hour 3"
+                    - option "Hour 4"
+                    - option "Hour 5"
+                    - option "Hour 6"
+              - generic [ref=f1e64]:
+                - button "Load Students & Mark Attendance" [disabled]
+  - button "Open Next.js Dev Tools" [ref=f1e70] [cursor=pointer]
+  - alert [ref=f1e74]
+```
+
+# Test source
+
+```ts
+  1   | import { test, expect } from '@playwright/test';
+  2   | import { login } from './helpers';
+  3   | 
+  4   | /**
+  5   |  * Teacher Browser Workflow
+  6   |  * phase4_teacher_a: user_id=13, teacher.id=3
+  7   |  * Authorized sessions for teacher_a: sessions 3,4,5,6,7
+  8   |  * phase4_teacher_b: user_id=14, teacher.id=4
+  9   |  */
+  10  | test.describe('Teacher Browser Workflow', () => {
+  11  |   test('Teacher can log in and teacher dashboard loads', async ({ page }) => {
+  12  |     const errors: string[] = [];
+  13  |     page.on('pageerror', err => errors.push(err.message));
+  14  | 
+  15  |     await login(page, 'phase4_teacher_a');
+  16  | 
+  17  |     // Teacher redirects to /dashboard/teacher
+  18  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
+  19  | 
+  20  |     const heading = page.getByRole('heading', { name: /Teacher Dashboard/i, exact: false }).first();
+  21  |     await expect(heading).toBeVisible({ timeout: 10000 });
+  22  | 
+  23  |     const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+  24  |     await expect(logoutBtn).toBeVisible();
+  25  | 
+  26  |     const appErrors = errors.filter(e => !e.includes('Warning:') && !e.includes('hydrat'));
+  27  |     expect(appErrors).toHaveLength(0);
+  28  |   });
+  29  | 
+  30  |   test('Teacher can mark attendance for an authorized session', async ({ page }) => {
+  31  |     await login(page, 'phase4_teacher_a');
+  32  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
+  33  | 
+  34  |     // Navigate to attendance page
+  35  |     await page.goto('/dashboard/teacher/take-attendance');
+  36  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher\/take-attendance.*/);
+  37  |     await expect(page.getByRole('heading', { name: /Take Attendance/i })).toBeVisible({ timeout: 10000 });
+  38  | 
+  39  |     // Select class - Phase 4 DB should have classes populated for teacher_a
+  40  |     const classSelect = page.locator('select').first();
+  41  |     await classSelect.waitFor({ state: 'visible' });
+  42  |     await classSelect.selectOption({ index: 1 }); // Pick first available class
+  43  | 
+  44  |     // Select subject
+  45  |     const subjectSelect = page.locator('select').nth(1);
+  46  |     await subjectSelect.waitFor({ state: 'visible' });
+  47  |     await subjectSelect.selectOption({ index: 1 }); // Pick first available subject
+  48  | 
+  49  |     // Start session
+  50  |     await page.getByRole('button', { name: 'Start Session' }).click();
+  51  | 
+  52  |     // Verify students render
+  53  |     await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
+  54  |     
+  55  |     // Mark all present
+  56  |     await page.getByRole('button', { name: 'Mark All Present' }).click();
+  57  |     
+  58  |     // Submit
+  59  |     await page.getByRole('button', { name: 'Submit Attendance' }).click();
+  60  |     
+  61  |     // Success message should appear
+  62  |     await expect(page.locator('text=Attendance successfully recorded')).toBeVisible({ timeout: 10000 });
+  63  |     
+  64  |     // Should be redirected to dashboard eventually
+  65  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/, { timeout: 15000 });
+  66  |   });
+  67  | 
+  68  |   test('Teacher cannot access unauthorized session attendance page', async ({ page }) => {
+  69  |     // session 999999 does not exist - this should be rejected by the backend
+  70  |     await login(page, 'phase4_teacher_a');
+  71  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
+  72  | 
+  73  |     await page.goto('/dashboard/teacher/take-attendance?sessionId=999999');
+  74  | 
+  75  |     // Teacher stays in dashboard — the app fetches their own sessions only
+  76  |     // The unauthorized session ID simply returns no data, not another teacher's data
+  77  |     const bodyText = await page.locator('body').textContent() ?? '';
+  78  | 
+  79  |     // Verify Teacher B's data is NOT silently displayed
+  80  |     expect(bodyText).not.toContain('Teacher B Unauthorized Data');
+  81  |     // Page must not crash completely
+  82  |     expect(bodyText).not.toContain('Application error');
+  83  |   });
+  84  | 
+  85  |   test('Teacher can execute full attendance workflow', async ({ page }) => {
+  86  |     await login(page, 'phase4_teacher_a');
+  87  |     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
+  88  | 
+  89  |     await page.goto('/dashboard/teacher/take-attendance');
+  90  |     
+  91  |     // Select the first available class
+  92  |     const classSelect = page.locator('select').nth(0);
+  93  |     await classSelect.waitFor();
+  94  |     // phase4_teacher_a is assigned to class 2 (CS - 3 (Sec A))
+> 95  |     await classSelect.selectOption({ index: 1 }); // select first option after placeholder
+      |                       ^ Error: locator.selectOption: Test timeout of 30000ms exceeded.
+  96  | 
+  97  |     // Select the first available subject
+  98  |     const subjectSelect = page.locator('select').nth(1);
+  99  |     await subjectSelect.selectOption({ index: 1 });
+  100 | 
+  101 |     // Click "Load Students & Mark Attendance"
+  102 |     await page.getByRole('button', { name: /Load Students & Mark Attendance/i }).click();
+  103 | 
+  104 |     // Check that table loads
+  105 |     await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
+  106 | 
+  107 |     // Mark ALL Present
+  108 |     await page.getByRole('button', { name: /Mark ALL Present/i }).click();
+  109 | 
+  110 |     // Submit Attendance
+  111 |     await page.getByRole('button', { name: /Submit Attendance/i }).click();
+  112 | 
+  113 |     // Wait for success popup
+  114 |     await expect(page.getByRole('heading', { name: /Success!/i })).toBeVisible({ timeout: 5000 });
+  115 |   });
+  116 | });
+  117 | 
+```

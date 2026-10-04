@@ -199,7 +199,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => logout()} className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+            <Button aria-label="Logout" variant="ghost" size="icon" onClick={() => logout()} className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="w-5 h-5" />
             </Button>
           </div>

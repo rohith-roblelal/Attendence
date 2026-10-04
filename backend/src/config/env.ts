@@ -11,6 +11,7 @@ const baseSchema = z.object({
   DB_USER: z.string().default('root'),
   DB_PASSWORD: z.string().default(''),
   DB_NAME: z.string().default('college_attendance'),
+  DB_CONNECTION_LIMIT: z.string().default('10'),
   JWT_SECRET: z.string().optional(),
   FRONTEND_URL: z.string().optional(),
 });

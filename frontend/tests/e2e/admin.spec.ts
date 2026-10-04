@@ -19,12 +19,12 @@ test.describe('ADMIN Browser Workflow', () => {
     await expect(page).toHaveURL(/.*\/dashboard\/administration.*/);
 
     // Verify page title heading is visible
-    await expect(page.locator('h1')).toBeVisible({ timeout: 10000 });
-    const heading = await page.locator('h1').first().textContent();
-    expect(heading).toBeTruthy();
+    const heading = page.getByRole('heading', { name: /Administration Dashboard/i }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     // Verify navigation sidebar renders — look for "Logout" button presence
-    await expect(page.locator('button:has-text("Logout")').first()).toBeVisible();
+    const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+    await expect(logoutBtn).toBeVisible();
 
     // No uncaught exceptions
     const appErrors = errors.filter(e => !e.includes('Warning:') && !e.includes('hydrat'));

@@ -1,0 +1,42 @@
+2:I["[project]/node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"SegmentViewNode"]
+4:"$Sreact.fragment"
+9:I["[project]/node_modules/next/dist/client/components/client-segment.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"ClientSegmentRoot"]
+a:I["[project]/app/dashboard/layout.tsx [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js","/_next/static/chunks/node_modules_%40base-ui_react_0jb7tmt._.js","/_next/static/chunks/node_modules_0kip58c._.js","/_next/static/chunks/_074-8wl._.js"],"default"]
+c:I["[project]/node_modules/next/dist/client/components/layout-router.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"default"]
+e:I["[project]/node_modules/next/dist/client/components/render-from-template-context.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"default"]
+15:I["[project]/node_modules/next/dist/client/components/client-page.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"ClientPageRoot"]
+16:I["[project]/app/dashboard/teacher/page.tsx [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js","/_next/static/chunks/node_modules_%40base-ui_react_0jb7tmt._.js","/_next/static/chunks/node_modules_0kip58c._.js","/_next/static/chunks/_074-8wl._.js","/_next/static/chunks/_0_6nvdr._.js","/_next/static/chunks/node_modules_1qh921-._.js"],"default"]
+1e:I["[project]/node_modules/next/dist/lib/framework/boundary-components.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"OutletBoundary"]
+20:"$Sreact.suspense"
+2e:I["[project]/node_modules/next/dist/lib/framework/boundary-components.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"ViewportBoundary"]
+38:I["[project]/node_modules/next/dist/lib/framework/boundary-components.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"MetadataBoundary"]
+19:D"$1b"
+19:D"$1a"
+19:D"$1d"
+19:["$","$L1e",null,{"children":["$","$20",null,{"name":"Next.MetadataOutlet","children":"$@21"},"$1a","$1f",1]},"$1a","$1c",1]
+22:X
+24:D"$27"
+24:D"$25"
+24:D"$28"
+24:null
+29:D"$2b"
+29:D"$2a"
+29:D"$2d"
+2f:D"$31"
+2f:D"$30"
+29:["$","$L2e","c8691809v",{"children":"$L2f"},"$2a","$2c",1]
+32:D"$34"
+32:D"$33"
+32:D"$36"
+3a:D"$3c"
+3a:D"$3b"
+32:["$","div","c8691809m",{"hidden":true,"children":["$","$L38",null,{"children":["$","$20",null,{"name":"Next.Metadata","children":"$L3a"},"$33","$39",1]},"$33","$37",1]},"$33","$35",1]
+0:{"f":[["children","dashboard",["dashboard",{"children":["teacher",{"children":["__PAGE__",{},"$undefined","$undefined",4096]},"$undefined","$undefined",4096]},"$undefined","$undefined",4096],[["$","$L2","layout",{"type":"layout","pagePath":"dashboard/layout.tsx","children":["$","$4","c",{"children":[[["$","script","script-0",{"src":"/_next/static/chunks/node_modules_%40base-ui_react_0jb7tmt._.js","async":true,"nonce":"$undefined"},null,"$5",0],["$","script","script-1",{"src":"/_next/static/chunks/node_modules_0kip58c._.js","async":true,"nonce":"$undefined"},null,"$6",0],["$","script","script-2",{"src":"/_next/static/chunks/_074-8wl._.js","async":true,"nonce":"$undefined"},null,"$7",0]],["$","$L9",null,{"Component":"$a","slots":{"children":["$","$Lc",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Le",null,{},null,"$d",1],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined","segmentViewBoundaries":["$undefined","$undefined","$undefined","$undefined"]},null,"$b",0]},"serverProvidedParams":{"params":{},"promises":null}},null,"$8",1]]},null,"$3",1]},null,"$1",0],{"children":[["$","$4","c",{"children":[null,["$","$Lc",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$Le",null,{},null,"$11",1],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined","segmentViewBoundaries":["$undefined","$undefined","$undefined","$undefined"]},null,"$10",1]]},null,"$f",0],{"children":[["$","$4","c",{"children":[["$","$L2","c-page",{"type":"page","pagePath":"dashboard/teacher/page.tsx","children":["$","$L15",null,{"Component":"$16","serverProvidedParams":{"searchParams":{},"params":"$0:f:0:3:0:props:children:props:children:1:props:serverProvidedParams:params","promises":null}},null,"$14",1]},null,"$13",1],[["$","script","script-0",{"src":"/_next/static/chunks/_0_6nvdr._.js","async":true,"nonce":"$undefined"},null,"$17",0],["$","script","script-1",{"src":"/_next/static/chunks/node_modules_1qh921-._.js","async":true,"nonce":"$undefined"},null,"$18",0]],"$19"]},null,"$12",0],{},null,false,null]},null,false,"$22"]},null,false,null],["$","$4","h",{"children":["$24","$29","$32"]},null,"$23",0],false]],"q":"","i":true,"S":false,"h":null,"r":"$undefined","b":"development"}
+22:C
+2f:D"$3d"
+2f:[["$","meta","0",{"charSet":"utf-8"},"$1a","$3e",0],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1, maximum-scale=5"},"$1a","$3f",0],["$","meta","2",{"name":"theme-color","content":"white","media":"(prefers-color-scheme: light)"},"$1a","$40",0],["$","meta","3",{"name":"theme-color","content":"black","media":"(prefers-color-scheme: dark)"},"$1a","$41",0]]
+54:I["[project]/node_modules/next/dist/lib/metadata/generate/icon-mark.js [app-client] (ecmascript)",["/_next/static/chunks/node_modules_1kr4uvi._.js","/_next/static/chunks/_19v1ewv._.js"],"IconMark"]
+21:D"$42"
+21:null
+3a:D"$43"
+3a:[["$","title","0",{"children":"College Attendance System"},"$1a","$44",0],["$","meta","1",{"name":"description","content":"Role-based college attendance and management system for administrators, HODs, teachers, and students. Track and manage attendance securely and efficiently."},"$1a","$45",0],["$","meta","2",{"name":"author","content":"Rohith Roblelal"},"$1a","$46",0],["$","meta","3",{"name":"keywords","content":"college,attendance,education,management,university,student tracking"},"$1a","$47",0],["$","meta","4",{"name":"robots","content":"index, follow"},"$1a","$48",0],["$","meta","5",{"name":"googlebot","content":"index, follow, max-video-preview:-1, max-image-preview:large, max-snippet:-1"},"$1a","$49",0],["$","meta","6",{"property":"og:title","content":"College Attendance System"},"$1a","$4a",0],["$","meta","7",{"property":"og:description","content":"Role-based college attendance and management system for administrators, HODs, teachers, and students."},"$1a","$4b",0],["$","meta","8",{"property":"og:site_name","content":"College Attendance System"},"$1a","$4c",0],["$","meta","9",{"property":"og:locale","content":"en_US"},"$1a","$4d",0],["$","meta","10",{"property":"og:type","content":"website"},"$1a","$4e",0],["$","meta","11",{"name":"twitter:card","content":"summary"},"$1a","$4f",0],["$","meta","12",{"name":"twitter:title","content":"College Attendance System"},"$1a","$50",0],["$","meta","13",{"name":"twitter:description","content":"Role-based college attendance and management system for administrators, HODs, teachers, and students."},"$1a","$51",0],["$","link","14",{"rel":"icon","href":"/favicon.ico?favicon.276b-mbucs-e6.ico","sizes":"32x32","type":"image/x-icon"},"$1a","$52",0],["$","$L54","15",{},"$1a","$53",0]]

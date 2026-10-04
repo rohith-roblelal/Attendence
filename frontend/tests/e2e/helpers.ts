@@ -29,9 +29,9 @@ export async function login(page: Page, username: string, password = 'password12
  * The sidebar button has visible text "Logout" at all times on desktop.
  */
 export async function logout(page: Page) {
-  // The desktop sidebar always shows "Logout" button text
-  const logoutBtn = page.locator('button:has-text("Logout")').first();
-  await expect(logoutBtn).toBeVisible({ timeout: 10000 });
+  // Use getByRole to match both the desktop text ("Logout") and the mobile aria-label ("Logout")
+  const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+  await expect(logoutBtn).toBeVisible({ timeout: 5000 });
   await logoutBtn.click();
   // Wait to arrive at login
   await expect(page).toHaveURL(/.*\/login.*/, { timeout: 10000 });

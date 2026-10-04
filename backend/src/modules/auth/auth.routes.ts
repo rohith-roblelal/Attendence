@@ -8,9 +8,11 @@ import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
+import { env } from '../../config/env';
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limit each IP to 10 login requests per `window`
+  max: env.NODE_ENV === 'production' ? 10 : 100, // Limit each IP to 10 login requests in production, 100 in dev
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 'error', message: 'Too many authentication attempts, please try again later.' }

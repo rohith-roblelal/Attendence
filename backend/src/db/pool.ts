@@ -9,7 +9,7 @@ export const pool = mysql.createPool({
   password: env.DB_PASSWORD,
   database: env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: env.NODE_ENV === 'production' ? 50 : 10,
+  connectionLimit: parseInt(env.DB_CONNECTION_LIMIT, 10),
   queueLimit: 0,
   connectTimeout: 10000,
   idleTimeout: 60000,

@@ -17,8 +17,11 @@ test.describe('Teacher Browser Workflow', () => {
     // Teacher redirects to /dashboard/teacher
     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
 
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+    const heading = page.getByRole('heading', { name: /Teacher Dashboard/i, exact: false }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
+
+    const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+    await expect(logoutBtn).toBeVisible();
 
     const appErrors = errors.filter(e => !e.includes('Warning:') && !e.includes('hydrat'));
     expect(appErrors).toHaveLength(0);
@@ -43,8 +46,12 @@ test.describe('Teacher Browser Workflow', () => {
     await subjectSelect.waitFor({ state: 'visible' });
     await subjectSelect.selectOption({ index: 1 }); // Pick first available subject
 
+    // Select period 2 to avoid conflicting with seeder_2_2 period 1
+    const periodSelect = page.locator('select').nth(2);
+    await periodSelect.selectOption({ value: '2' });
+
     // Start session
-    await page.getByRole('button', { name: 'Start Session' }).click();
+    await page.getByRole('button', { name: /Load Students & Mark Attendance/i }).click();
 
     // Verify students render
     await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
@@ -56,7 +63,7 @@ test.describe('Teacher Browser Workflow', () => {
     await page.getByRole('button', { name: 'Submit Attendance' }).click();
     
     // Success message should appear
-    await expect(page.locator('text=Attendance successfully recorded')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Attendance successfully recorded').first()).toBeVisible({ timeout: 10000 });
     
     // Should be redirected to dashboard eventually
     await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/, { timeout: 15000 });
@@ -77,5 +84,41 @@ test.describe('Teacher Browser Workflow', () => {
     expect(bodyText).not.toContain('Teacher B Unauthorized Data');
     // Page must not crash completely
     expect(bodyText).not.toContain('Application error');
+  });
+
+  test('Teacher can execute full attendance workflow', async ({ page }) => {
+    await login(page, 'phase4_teacher_a');
+    await expect(page).toHaveURL(/.*\/dashboard\/teacher.*/);
+
+    await page.goto('/dashboard/teacher/take-attendance');
+    
+    // Select the first available class
+    const classSelect = page.locator('select').nth(0);
+    await classSelect.waitFor();
+    // phase4_teacher_a is assigned to class 2 (CS - 3 (Sec A))
+    await classSelect.selectOption({ index: 1 }); // select first option after placeholder
+
+    // Select the first available subject
+    const subjectSelect = page.locator('select').nth(1);
+    await subjectSelect.selectOption({ index: 1 });
+
+    // Select period 3 to avoid conflicting with other tests/seeders
+    const periodSelect = page.locator('select').nth(2);
+    await periodSelect.selectOption({ value: '3' });
+
+    // Click "Load Students & Mark Attendance"
+    await page.getByRole('button', { name: /Load Students & Mark Attendance/i }).click();
+
+    // Check that table loads
+    await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
+
+    // Mark ALL Present
+    await page.getByRole('button', { name: /Mark ALL Present/i }).click();
+
+    // Submit Attendance
+    await page.getByRole('button', { name: /Submit Attendance/i }).click();
+
+    // Wait for success popup
+    await expect(page.getByRole('heading', { name: /Success!/i })).toBeVisible({ timeout: 5000 });
   });
 });

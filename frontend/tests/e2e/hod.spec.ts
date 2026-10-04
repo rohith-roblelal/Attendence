@@ -16,11 +16,13 @@ test.describe('HOD Browser Workflow', () => {
     // HOD redirects to /dashboard/hod
     await expect(page).toHaveURL(/.*\/dashboard\/hod.*/);
 
-    // Dashboard h1 visible
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
+    // Dashboard heading visible
+    const heading = page.getByRole('heading', { name: /HOD Dashboard/i, exact: false }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     // Logout button is present (sidebar)
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+    const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+    await expect(logoutBtn).toBeVisible();
 
     // No fatal errors
     const appErrors = errors.filter(e => !e.includes('Warning:') && !e.includes('hydrat'));

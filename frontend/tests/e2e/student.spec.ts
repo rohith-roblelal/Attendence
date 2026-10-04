@@ -17,10 +17,12 @@ test.describe('Student Browser Workflow', () => {
     await expect(page).toHaveURL(/.*\/dashboard\/student.*/);
 
     // Dashboard heading visible
-    await expect(page.getByRole('heading', { name: /Student Dashboard/i })).toBeVisible({ timeout: 15000 });
+    const heading = page.getByRole('heading', { name: /Student Dashboard/i, exact: false }).first();
+    await expect(heading).toBeVisible({ timeout: 15000 });
 
     // Logout button is present
-    await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible();
+    const logoutBtn = page.getByRole('button', { name: /Logout/i }).first();
+    await expect(logoutBtn).toBeVisible();
 
     // Verify Student B's student_id is NOT rendered on Student A's dashboard
     const bodyText = await page.locator('body').textContent() ?? '';
@@ -43,8 +45,8 @@ test.describe('Student Browser Workflow', () => {
     // Navigate to attendance page
     await page.goto('/dashboard/student/subject-attendance');
 
-    // Verify attendance table is visible
-    await expect(page.getByRole('table').first()).toBeVisible({ timeout: 10000 });
+    // Verify attendance section is visible
+    await expect(page.getByText('Subject Breakdown')).toBeVisible({ timeout: 10000 });
 
     // This must load Student A's attendance, never Student B's
     bodyText = await page.locator('body').textContent() ?? '';
