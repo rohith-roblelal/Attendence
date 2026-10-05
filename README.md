@@ -53,7 +53,6 @@ Attendance Records
 
 ## 🧩 Architecture
 
-```text
                          ┌──────────────┐
                          │    Users     │
                          └──────┬───────┘
