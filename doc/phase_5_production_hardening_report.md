@@ -76,7 +76,7 @@ Phase 5 successfully prepared the College Attendance system for production deplo
 * **Result**: **PASS**
 
 ## 14. Frontend Production Readiness
-* Hardcoded API bases (`http://localhost:3001/api/v1`) were replaced with safe `NEXT_PUBLIC_API_URL` environment variables via `lib/api/client.ts`.
+* Hardcoded API bases (`https://attendence-dcaw.onrender.com/api/v1`) were replaced with safe `NEXT_PUBLIC_API_URL` environment variables via `lib/api/client.ts`.
 * Unused development artifacts in `.next` and `trace-out` are properly ignored by `tsconfig.json`.
 * **Result**: **PASS**
 

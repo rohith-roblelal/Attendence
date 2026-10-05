@@ -1,6 +1,6 @@
 const http = require('http');
 
-const API_URL = 'http://localhost:3001/api/v1';
+const API_URL = 'https://attendence-dcaw.onrender.com/api/v1';
 
 async function request(method, path, data, cookie, origin) {
   const options = {
@@ -15,7 +15,7 @@ async function request(method, path, data, cookie, origin) {
   const text = await res.text();
   let json = {};
   try { json = JSON.parse(text); } catch (e) { json = { text }; }
-  
+
   let cookies = [];
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) cookies = setCookie.split(',').map(s => s.split(';')[0]);
@@ -56,12 +56,12 @@ async function runTests() {
     class_session_id: 1,
     records: [{ student_id: 1, status: 'PRESENT' }]
   }, teacherACookie));
-  
+
   const resps = await Promise.all(payloads);
   const statuses = resps.map(r => r.status);
   const successes = statuses.filter(s => s === 201 || s === 200).length;
   const conflicts = statuses.filter(s => s === 409).length;
-  
+
   results.push({ test: 'Concurrency Duplicate Att', expected: 'Max 1 success', actual: `${successes} success, ${conflicts} conflicts`, pass: successes <= 1 });
 
   console.table(results);

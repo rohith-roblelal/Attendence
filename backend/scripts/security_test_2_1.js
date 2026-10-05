@@ -1,6 +1,6 @@
 const http = require('http');
 
-const API_URL = 'http://localhost:3001/api/v1';
+const API_URL = 'https://attendence-dcaw.onrender.com/api/v1';
 
 async function request(method, path, data, cookie, origin) {
   const options = {
@@ -15,7 +15,7 @@ async function request(method, path, data, cookie, origin) {
   const text = await res.text();
   let json = {};
   try { json = JSON.parse(text); } catch (e) { json = { text }; }
-  
+
   let cookies = [];
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) cookies = setCookie.split(',').map(s => s.split(';')[0]);
@@ -30,7 +30,7 @@ async function runTests() {
   // Logins
   const rAdmin = await request('POST', '/auth/login', { username: 'admin', password: 'password123' });
   const adminCookie = rAdmin.cookies;
-  
+
   const rTeacherA = await request('POST', '/auth/login', { username: 'teacher_a', password: 'password123' });
   const teacherACookie = rTeacherA.cookies;
 
@@ -43,7 +43,7 @@ async function runTests() {
   const rStudentB = await request('POST', '/auth/login', { username: 'student_b', password: 'password123' });
   const studentBCookie = rStudentB.cookies;
 
-  console.log({adminStatus: rAdmin.status, stuStatus: rStudentA.status});
+  console.log({ adminStatus: rAdmin.status, stuStatus: rStudentA.status });
 
   // 1. Student IDOR (Real cross-student)
   const stuInfo = await request('GET', '/dashboard/student', null, studentBCookie);
@@ -70,7 +70,7 @@ async function runTests() {
   // 5. Concurrency Duplicate Attendance
   const taSessions = await request('GET', '/dashboard/teacher/sessions', null, teacherACookie);
   const taSessionId = taSessions.json?.data?.sessions?.[0]?.id;
-  if(taSessionId) {
+  if (taSessionId) {
     const payloads = Array(5).fill(0).map(() => request('POST', `/attendance/bulk`, {
       class_session_id: taSessionId,
       records: [{ student_id: 1, status: 'PRESENT' }]

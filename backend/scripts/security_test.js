@@ -1,6 +1,6 @@
 const http = require('http');
 
-const API_URL = 'http://localhost:3001/api/v1';
+const API_URL = 'https://attendence-dcaw.onrender.com/api/v1';
 
 async function request(method, path, data, cookie) {
   const options = {
@@ -14,7 +14,7 @@ async function request(method, path, data, cookie) {
   const text = await res.text();
   let json = {};
   try { json = JSON.parse(text); } catch (e) { json = { text }; }
-  
+
   let cookies = [];
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) cookies = setCookie.split(',').map(s => s.split(';')[0]);
@@ -51,10 +51,10 @@ async function runTests() {
   const tA_login = await request('POST', '/auth/login', { username: 'teacher_a', password: 'password123' });
   const stuA_login = await request('POST', '/auth/login', { username: 'student_a', password: 'password123' });
   // const hodA_login = await request('POST', '/auth/login', { username: 'teacher_b', password: 'password123' }); // using teacher_b as HOD just for test if needed
-  
+
   const teacherACookie = tA_login.cookies;
   const studentACookie = stuA_login.cookies;
-  
+
 
   results.push({ name: 'Login Teacher A', expected: 200, actual: tA_login.status, pass: tA_login.status === 200 });
   results.push({ name: 'Login Student A', expected: 200, actual: stuA_login.status, pass: stuA_login.status === 200 });
@@ -99,7 +99,7 @@ async function runTests() {
   */
 
   // 10. Rate Limiting Test (Spamming invalid logins) - MUST BE LAST
-  for(let i=0; i<15; i++) {
+  for (let i = 0; i < 15; i++) {
     await request('POST', '/auth/login', { username: 'nonexistent', password: 'asd' });
   }
   const r6 = await request('POST', '/auth/login', { username: 'nonexistent', password: 'asd' });

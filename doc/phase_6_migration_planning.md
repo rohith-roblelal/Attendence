@@ -40,7 +40,7 @@ After evaluating the application stack (Next.js 16, Node.js/Express, MySQL), bud
 ## 3. Environment Variables Matrix
 
 ### Local Development (XAMPP)
-* **Frontend** (`.env.local`): `NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1`
+* **Frontend** (`.env.local`): `NEXT_PUBLIC_API_URL=https://attendence-dcaw.onrender.com/api/v1`
 * **Backend** (`.env`):
   * `FRONTEND_URL=http://localhost:3000`
   * `DB_HOST=127.0.0.1` (XAMPP)

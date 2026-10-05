@@ -1,6 +1,6 @@
 async function test() {
   try {
-    const res = await fetch('http://localhost:3001/api/v1/auth/login', {
+    const res = await fetch('https://attendence-dcaw.onrender.com/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -12,7 +12,7 @@ async function test() {
     const token = authData.data.token;
     console.log('Token:', token);
 
-    const tutorRes = await fetch('http://localhost:3001/api/v1/dashboard/tutor/students', {
+    const tutorRes = await fetch('https://attendence-dcaw.onrender.com/api/v1/dashboard/tutor/students', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const tutorData = await tutorRes.json();

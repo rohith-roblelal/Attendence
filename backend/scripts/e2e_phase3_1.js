@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 
-const API_URL = 'http://localhost:3001/api/v1';
+const API_URL = 'https://attendence-dcaw.onrender.com/api/v1';
 
 async function request(method, path, data, cookie) {
   const options = {
@@ -14,7 +14,7 @@ async function request(method, path, data, cookie) {
   const text = await res.text();
   let json = {};
   try { json = JSON.parse(text); } catch (e) { json = { text }; }
-  
+
   let cookies = [];
   const setCookie = res.headers.get('set-cookie');
   if (setCookie) cookies = setCookie.split(',').map(s => s.split(';')[0]);
@@ -25,8 +25,8 @@ async function request(method, path, data, cookie) {
 async function runPhase3_1() {
   console.log('Starting Phase 3.1 Strict API E2E Verification...');
   const results = [];
-  let dbConn = await mysql.createConnection({host: '127.0.0.1', user: 'root', password: '', database: 'college_attendance'});
-  
+  let dbConn = await mysql.createConnection({ host: '127.0.0.1', user: 'root', password: '', database: 'college_attendance' });
+
   const extractId = (res) => res?.data?.id || res?.id || res?.data?.[Object.keys(res.data)[0]]?.id || null;
 
   try {
@@ -52,13 +52,13 @@ async function runPhase3_1() {
     // 3. Admission Batch
     const rBatch = await request('POST', '/admission-batches', { academic_year_id: ayId, department_id: deptId, batch_name: `B${ts}`, admission_year: 2026 }, adminToken);
     results.push({ step: '3. Create Batch', expected: 201, actual: rBatch.status, pass: rBatch.status === 201 });
-    if (rBatch.status !== 201) console.dir(rBatch.json, {depth: null});
+    if (rBatch.status !== 201) console.dir(rBatch.json, { depth: null });
     const batchId = extractId(rBatch.json);
 
     // 4. Semester
     const rSem = await request('POST', '/semesters', { academic_year_id: ayId, semester_number: 1, name: 'Sem 1', start_date: '2026-08-01', end_date: '2026-12-31' }, adminToken);
     results.push({ step: '4. Create Semester', expected: 201, actual: rSem.status, pass: rSem.status === 201 });
-    if(rSem.status !== 201) console.log('SEM ERR:', rSem.json);
+    if (rSem.status !== 201) console.log('SEM ERR:', rSem.json);
     const semId = extractId(rSem.json);
 
     console.log('batchId:', batchId, 'semId:', semId);
@@ -66,7 +66,7 @@ async function runPhase3_1() {
     // 5. Class
     const rClass = await request('POST', '/classes', { admission_batch_id: batchId, semester_id: semId, section_name: 'A', class_code: `C${ts}` }, adminToken);
     results.push({ step: '5. Create Class', expected: 201, actual: rClass.status, pass: rClass.status === 201 });
-    if(rClass.status !== 201) console.dir(rClass.json, {depth: null});
+    if (rClass.status !== 201) console.dir(rClass.json, { depth: null });
     const classId = extractId(rClass.json);
     if (!classId) throw new Error('Class ID is null');
 
@@ -111,7 +111,7 @@ async function runPhase3_1() {
       attId = attRows[0].id;
       // Try PATCH
       const rPatch = await request('PATCH', `/attendance/${attId}`, { status: 'ABSENT' }, teacherToken);
-      if(rPatch.status === 200) {
+      if (rPatch.status === 200) {
         const [attRows2] = await dbConn.execute('SELECT id, status FROM attendance_records WHERE id = ?', [attId]);
         updatedStatus = attRows2[0].status;
       }
@@ -131,22 +131,22 @@ async function runPhase3_1() {
     // Create new session
     const rSess2 = await request('POST', '/class-sessions', { class_id: classId, class_subject_id: csId, session_date: '2026-10-05', period_number: 2, conducted_by_teacher_id: 1, contact_hours: 1, status: 'SCHEDULED', source: 'MANUAL' }, adminToken);
     const sessId2 = extractId(rSess2.json);
-    
+
     // Attempt bulk insert where one is missing status
-    const rBulkFail = await request('POST', '/attendance/bulk', { 
-      class_session_id: sessId2, 
+    const rBulkFail = await request('POST', '/attendance/bulk', {
+      class_session_id: sessId2,
       records: [
-        { student_id: studentId, status: 'PRESENT' }, 
+        { student_id: studentId, status: 'PRESENT' },
         { student_id: 9999, status: 'INVALID_STATUS' }
-      ] 
+      ]
     }, teacherToken);
-    
+
     const [dbBulkCheck] = await dbConn.execute('SELECT * FROM attendance_records WHERE class_session_id = ?', [sessId2]);
     results.push({ step: '14. Bulk Partial Rollback', expected: '0 records (rolled back)', actual: `${dbBulkCheck.length} records`, pass: dbBulkCheck.length === 0 });
 
     console.table(results);
-    
-  } catch(e) {
+
+  } catch (e) {
     console.error(e);
   } finally {
     dbConn.end();
