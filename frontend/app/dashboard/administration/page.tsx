@@ -194,7 +194,7 @@ export default function AdministrationPage() {
 
       <div id="alerts-section" className="pt-8 scroll-mt-6">
         <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid w-full md:w-auto grid-cols-2">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 h-auto gap-1">
             <TabsTrigger value="at_risk" className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-destructive" />
               At-Risk Students ({atRiskStudents.length})
