@@ -46,7 +46,7 @@ test.describe('Teacher Browser Workflow', () => {
     await subjectSelect.waitFor({ state: 'visible' });
     await subjectSelect.selectOption({ index: 1 }); // Pick first available subject
 
-    // Select period 2 to avoid conflicting with seeder_2_2 period 1
+    // Select period 2 to avoid conflicting with existing seeded sessions for period 1
     const periodSelect = page.locator('select').nth(2);
     await periodSelect.selectOption({ value: '2' });
 
