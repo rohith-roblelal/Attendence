@@ -104,7 +104,6 @@ Different users receive different capabilities based on their role.
 | API      | REST              |
 | Database | MySQL             |
 | Testing  | Playwright        |
-| Mobile   | Flutter — planned |
 
 ## 🚀 Installation
 
@@ -174,24 +173,6 @@ Testing should cover:
 * Frontend navigation
 * Responsive layouts
 * Production builds
-
-## 📱 Mobile Application Roadmap
-
-The web platform is the foundation for the next phase:
-
-```text
-Database
-   ↓
-Backend API
-   ↓
-Web Application
-   ↓
-Security & Performance Hardening
-   ↓
-Flutter Mobile Application
-```
-
-The planned Flutter application will consume the existing backend API rather than directly accessing the database.
 
 ## 🔮 Roadmap
 
