@@ -3,7 +3,7 @@ import * as service from './classes.service';
 
 export const getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await service.getAll(req.query);
+    const data = await service.getAll(req.query, (req as any).user);
     res.status(200).json({ status: 'success', data });
   } catch (err) { next(err); }
 };

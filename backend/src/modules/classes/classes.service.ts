@@ -1,4 +1,5 @@
 import * as repo from './classes.repository';
+import { pool } from '../../db/pool';
 
 const handleDuplicate = (error: any) => {
   if (error.code === 'ER_DUP_ENTRY') throw { status: 409, message: 'Class/Section already exists' };
@@ -7,8 +8,25 @@ const handleDuplicate = (error: any) => {
   throw error;
 };
 
-export const getAll = async (filters: any) => {
-  return repo.getClasses(filters);
+export const getAll = async (filters: any, user?: any) => {
+  const finalFilters = { ...filters };
+
+  // If user is HOD, restrict to their department's classes
+  if (user?.role === 'HOD') {
+    const [hodRows] = await pool.query(
+      `SELECT h.department_id 
+       FROM department_hod_assignments h 
+       JOIN teachers t ON h.teacher_id = t.id 
+       WHERE t.user_id = ? AND h.is_active = TRUE LIMIT 1`,
+      [user.id]
+    );
+    const hod = (hodRows as any[])[0];
+    if (hod?.department_id) {
+      finalFilters.department_id = hod.department_id;
+    }
+  }
+
+  return repo.getClasses(finalFilters);
 };
 
 export const getById = async (id: number) => {
