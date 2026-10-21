@@ -211,7 +211,7 @@ Build a complete digital attendance ecosystem that is:
 ## 👥 Project Team Members
 
 1. **ROHITH ROBLELAL**
-2. **MOHAMMAD SALIH**
+2. **MOHAMMED SALIH P M**
 3. **VISHNU K**
 4. **VAISAGH C J**
 
