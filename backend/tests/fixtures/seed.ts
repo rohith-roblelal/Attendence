@@ -35,10 +35,10 @@ export const seedDatabase = async () => {
     // 2. Users (Admin, Teacher A, Teacher B, Student A)
     // role_id: 1=ADMIN, 2=TEACHER, 3=STUDENT
     await conn.query(`INSERT INTO users (id, username, password_hash, role_id, is_active, created_at, updated_at) VALUES 
-      (1, 'admin', 'hash', 1, 1, NOW(), NOW()),
-      (2, 'teacher_a', 'hash', 2, 1, NOW(), NOW()),
-      (3, 'teacher_b', 'hash', 2, 1, NOW(), NOW()),
-      (4, 'student_a', 'hash', 3, 1, NOW(), NOW())`);
+      (1, 'admin', '$argon2id$v=19$m=65536,p=4,t=3$VhdE2Nf7QDPNtchqKPR/Lw$eR44KTpzZiMokzqlpQjjsUNZ5JKJrij6Rv1MHrb24G8', 1, 1, NOW(), NOW()),
+      (2, 'teacher_a', '$argon2id$v=19$m=65536,p=4,t=3$TtWPQ18T0jt6vm/CzAVNYA$6e1ae74UwF388e3CXCUZ75jK8U3JJAcWNFtwV9K4ygg', 2, 1, NOW(), NOW()),
+      (3, 'teacher_b', '$argon2id$v=19$m=65536,p=4,t=3$TtWPQ18T0jt6vm/CzAVNYA$6e1ae74UwF388e3CXCUZ75jK8U3JJAcWNFtwV9K4ygg', 2, 1, NOW(), NOW()),
+      (4, 'student_a', '$argon2id$v=19$m=65536,p=4,t=3$UiwwWp8b+2dL4xui/P+ojw$aGxSPhLM7jKIVcByPHaL4cFMtQNG3tuC1e9BDjVe2lo', 3, 1, NOW(), NOW())`);
 
     // 3. Teachers
     await conn.query(`INSERT INTO teachers (id, user_id, teacher_id, first_name, last_name, status, created_at, updated_at) VALUES 
