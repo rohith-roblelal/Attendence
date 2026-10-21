@@ -101,31 +101,30 @@ export default function Students() {
 
   const [allUsers, setAllUsers] = useState<any[]>([]);
 
-  // Fetch users and classes only once
-  useEffect(() => {
-    if (isAdmin) {
-      Promise.all([usersApi.getUsers(), classesApi.getClasses()])
-        .then(([usersRes, classRes]) => {
-          setAllUsers(usersRes.data.data.users || []);
-          setClasses(classRes.data.data);
-        })
-        .catch(err => console.error('Failed to load users/classes', err));
-    }
-  }, [isAdmin]);
-
   const fetchData = async () => {
     setLoading(true);
     try {
       if (isAdmin) {
-        const studRes = await studentsApi.getStudents({ page, limit });
-        setStudents(studRes.data.data);
+        const [studRes, usersRes, classRes] = await Promise.all([
+          studentsApi.getStudents({ page, limit }),
+          usersApi.getUsers(),
+          classesApi.getClasses()
+        ]);
+        
+        const fetchedStudents = studRes.data.data || [];
+        setStudents(fetchedStudents);
+        
         if (studRes.data.meta) {
           setTotalPages(studRes.data.meta.totalPages);
           setTotalRecords(studRes.data.meta.total);
         }
-        
-        const studentUserIds = studRes.data.data.map((s: any) => s.user_id);
-        setUsers(allUsers.filter((u: any) => 
+
+        const rawUsers = usersRes.data.data?.users || usersRes.data.data || [];
+        setAllUsers(rawUsers);
+        setClasses(classRes.data.data || []);
+
+        const studentUserIds = fetchedStudents.map((s: any) => s.user_id);
+        setUsers(rawUsers.filter((u: any) => 
           u.role === 'STUDENT' && !studentUserIds.includes(u.id)
         ));
       } else {
@@ -151,19 +150,9 @@ export default function Students() {
     }
   };
 
-  // Re-filter users if allUsers changes (e.g. after it's fetched initially)
-  useEffect(() => {
-    if (isAdmin && allUsers.length > 0 && students.length > 0) {
-      const studentUserIds = students.map((s: any) => s.user_id);
-      setUsers(allUsers.filter((u: any) => 
-        u.role === 'STUDENT' && !studentUserIds.includes(u.id)
-      ));
-    }
-  }, [allUsers, students, isAdmin]);
-
   useEffect(() => {
     fetchData();
-  }, [page, limit]);
+  }, [page, limit, isAdmin]);
 
   
   const onSubmit = async (data: any) => {
