@@ -40,9 +40,10 @@ const updateSessionSchema = z.object({
   source: z.string().min(1).max(30).optional(),
 });
 
-export default function ClassSessions() {
+export default function ClassSessions({ readOnly = false }: { readOnly?: boolean }) {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMINISTRATION';
+  const isHod = user?.role === 'HOD';
 
   const [sessions, setSessions] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
@@ -85,7 +86,7 @@ export default function ClassSessions() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      if (isAdmin) {
+      if (isAdmin || isHod) {
         const [sessRes, clsRes, csRes, subRes, tRes] = await Promise.all([
           classSessionsApi.getAll(),
           classesApi.getClasses(),
@@ -196,8 +197,8 @@ export default function ClassSessions() {
     }
   };
 
-  // For Admins, filter by selected class. For Teachers, show all their assigned subjects.
-  const availableSubjects = isAdmin 
+  // For Admins and HODs, filter by selected class. For Teachers, show all their assigned subjects.
+  const availableSubjects = (isAdmin || isHod) 
     ? classSubjects.filter(cs => cs.class_id === selectedClassId && cs.is_active)
     : classSubjects.filter(cs => cs.is_active);
 
@@ -213,15 +214,17 @@ export default function ClassSessions() {
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <div className="bg-blue-50 p-4 rounded text-sm text-blue-800 flex flex-col gap-1 border border-blue-100">
-        <span className="font-semibold">Important:</span>
-        <span>The <strong>Permanent Teacher</strong> is derived from the Class-Subject assignment. You may record a different <strong>Conducting Teacher</strong> here (e.g. for a substitution) without changing the permanent assignment. Cancelled sessions remain in the database for historical integrity but are excluded from attendance.</span>
-      </div>
+      {!readOnly && (
+        <>
+          <div className="bg-blue-50 p-4 rounded text-sm text-blue-800 flex flex-col gap-1 border border-blue-100">
+            <span className="font-semibold">Important:</span>
+            <span>The <strong>Permanent Teacher</strong> is derived from the Class-Subject assignment. You may record a different <strong>Conducting Teacher</strong> here (e.g. for a substitution) without changing the permanent assignment. Cancelled sessions remain in the database for historical integrity but are excluded from attendance.</span>
+          </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? 'Edit Session' : 'Record Class Session'}</CardTitle>
-        </CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>{isEditing ? 'Edit Session' : 'Record Class Session'}</CardTitle>
+            </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -308,6 +311,8 @@ export default function ClassSessions() {
           </form>
         </CardContent>
       </Card>
+      </>
+      )}
 
       <div className="border rounded-md overflow-x-auto">
         <Table>
@@ -318,14 +323,14 @@ export default function ClassSessions() {
               <TableHead>Subject</TableHead>
               <TableHead>Conducted By</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {!readOnly && <TableHead className="text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={readOnly ? 5 : 6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : sessions.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No sessions logged.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={readOnly ? 5 : 6} className="text-center text-muted-foreground">No sessions logged.</TableCell></TableRow>
             ) : (
               // Sort by date descending, then period
               [...sessions].sort((a,b) => {
@@ -354,7 +359,7 @@ export default function ClassSessions() {
                     </TableCell>
                     <TableCell>
                       <div className={session.conducted_by_teacher_id ? "text-purple-600 font-medium" : "text-muted-foreground"}>
-                        {conductedTeacher ? `${conductedTeacher.first_name} ${conductedTeacher.last_name}` : 'Unknown'}
+                        {conductedTeacher ? `${conductedTeacher.first_name} ${conductedTeacher.last_name || ''}` : 'Unknown'}
                       </div>
                       {session.conducted_by_teacher_id && <div className="text-xs text-purple-400">(Substitute)</div>}
                     </TableCell>
@@ -363,22 +368,24 @@ export default function ClassSessions() {
                         {session.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-3">
-                        <button onClick={() => editSession(session)} className="text-primary hover:text-primary" aria-label="Edit Session" title="Edit Session">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        {session.status !== 'CANCELLED' ? (
-                          <button onClick={() => setCancelId(session.id)} className="text-destructive hover:text-red-900" title="Cancel Session" aria-label="Cancel Session">
-                            <XCircle className="w-4 h-4" />
+                    {!readOnly && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-3">
+                          <button onClick={() => editSession(session)} className="text-primary hover:text-primary" aria-label="Edit Session" title="Edit Session">
+                            <Edit2 className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <button disabled className="text-gray-300 cursor-not-allowed">
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
+                          {session.status !== 'CANCELLED' ? (
+                            <button onClick={() => setCancelId(session.id)} className="text-destructive hover:text-red-900" title="Cancel Session" aria-label="Cancel Session">
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button disabled className="text-gray-300 cursor-not-allowed">
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })

@@ -17,7 +17,7 @@ export default function SessionsPage() {
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="assignments">Class-Subject Assignments</TabsTrigger>
         </TabsList>
-        <TabsContent value="sessions" className="mt-6"><ClassSessions /></TabsContent>
+        <TabsContent value="sessions" className="mt-6"><ClassSessions readOnly={true} /></TabsContent>
         <TabsContent value="assignments" className="mt-6"><ClassSubjects readOnly={true} /></TabsContent>
       </Tabs>
     </div>
