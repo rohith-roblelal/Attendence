@@ -5,6 +5,7 @@ export const getStudents = async (filters: any) => {
     FROM students s
     JOIN users u ON s.user_id = u.id
     LEFT JOIN student_enrollments se ON se.student_id = s.id AND se.status = 'ACTIVE'
+    LEFT JOIN classes c ON se.class_id = c.id
     WHERE 1=1
   `;
   const values: any[] = [];
@@ -27,7 +28,7 @@ export const getStudents = async (filters: any) => {
   const page = filters.page ? parseInt(filters.page, 10) : 1;
   const limit = filters.limit ? parseInt(filters.limit, 10) : 0; // 0 means no pagination
 
-  let query = `SELECT s.*, u.username, u.email, se.class_id as current_class_id ${baseQuery} ORDER BY CAST(s.student_id AS UNSIGNED) ASC, s.student_id ASC`;
+  let query = `SELECT s.*, u.username, u.email, se.class_id as current_class_id, c.class_code ${baseQuery} ORDER BY CAST(s.student_id AS UNSIGNED) ASC, s.student_id ASC`;
   let total = 0;
 
   if (limit > 0) {

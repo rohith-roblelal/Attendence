@@ -65,7 +65,7 @@ export default function Students() {
 
   // Pagination state
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(15);
+  const [limit, setLimit] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
@@ -105,8 +105,9 @@ export default function Students() {
     setLoading(true);
     try {
       if (isAdmin) {
-        const [studRes, usersRes, classRes] = await Promise.all([
+        const [studRes, allStudRes, usersRes, classRes] = await Promise.all([
           studentsApi.getStudents({ page, limit }),
+          studentsApi.getStudents({ limit: 1000 }),
           usersApi.getUsers(),
           classesApi.getClasses()
         ]);
@@ -123,7 +124,8 @@ export default function Students() {
         setAllUsers(rawUsers);
         setClasses(classRes.data.data || []);
 
-        const studentUserIds = fetchedStudents.map((s: any) => s.user_id);
+        const allStudentsList = allStudRes.data.data || [];
+        const studentUserIds = allStudentsList.map((s: any) => s.user_id);
         setUsers(rawUsers.filter((u: any) => 
           u.role === 'STUDENT' && !studentUserIds.includes(u.id)
         ));
@@ -246,11 +248,11 @@ export default function Students() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {!isEditing && (
                 <div className="lg:col-span-2 space-y-2">
-                  <Label>Link to User Account</Label>
+                  <Label>Link to User Account {users.length > 0 ? `(${users.length} unlinked available)` : '(No unlinked accounts)'}</Label>
                   <select {...register('user_id', { valueAsNumber: true })} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
                     <option value={0}>Select unlinked account...</option>
                     {users.map(u => (
-                      <option key={u.id} value={u.id}>{u.username}</option>
+                      <option key={u.id} value={u.id}>{u.username} (ID: {u.id})</option>
                     ))}
                   </select>
                   {errors.user_id && <p className="text-destructive text-xs mt-1">{errors.user_id.message as string}</p>}
@@ -340,7 +342,9 @@ export default function Students() {
           <TableHeader>
             <TableRow>
               <TableHead>ID / Adm No</TableHead>
+              <TableHead>Username</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Class</TableHead>
               <TableHead>Status</TableHead>
               {isAdmin && <TableHead className="text-right">Actions</TableHead>}
               {!isAdmin && <TableHead className="text-right">Details</TableHead>}
@@ -348,9 +352,9 @@ export default function Students() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : students.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No students found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No students found.</TableCell></TableRow>
             ) : (
               students.map((student: any) => (
                 <TableRow key={student.id || student.student_id}>
@@ -358,7 +362,15 @@ export default function Students() {
                     <div>{student.student_id || student.admission_number}</div>
                     <div className="text-xs text-muted-foreground">{student.admission_number || '-'}</div>
                   </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {student.username || '-'}
+                  </TableCell>
                   <TableCell>{student.first_name || student.student_name} {student.last_name || ''}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {student.class_code || 'Unassigned'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={(student.status || 'ACTIVE') === 'ACTIVE' ? "default" : "destructive"}>
                       {student.status || 'ACTIVE'}
