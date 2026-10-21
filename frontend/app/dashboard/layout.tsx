@@ -34,6 +34,8 @@ const navItems: NavItem[] = [
 
   // HOD
   { name: 'Dashboard', href: '/dashboard/hod', icon: Home, roles: ['HOD'], group: 'MAIN' },
+  { name: 'Subjects', href: '/dashboard/hod/subjects', icon: BookOpen, roles: ['HOD'], group: 'DEPARTMENT' },
+  { name: 'Timetable', href: '/dashboard/hod/timetable', icon: Calendar, roles: ['HOD'], group: 'DEPARTMENT' },
   { name: 'Teachers & Classes', href: '/dashboard/hod/people', icon: GraduationCap, roles: ['HOD'], group: 'DEPARTMENT' },
   { name: 'Department Reports', href: '/dashboard/hod/reports', icon: BarChart3, roles: ['HOD'], group: 'DEPARTMENT' },
   { name: 'Tutor Dashboard', href: '/dashboard/tutor', icon: Home, roles: ['TUTOR'], group: 'MAIN' },

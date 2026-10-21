@@ -27,18 +27,26 @@ export const getAdministrationStats = async () => {
     `),
     pool.query(`
       SELECT 
-        st.student_id as admission_number, 
-        CONCAT(st.first_name, ' ', COALESCE(st.last_name, '')) as student_name, 
+        COALESCE(st.admission_number, st.student_id) as admission_number, 
+        CONCAT(st.first_name, ' ', COALESCE(st.last_name, '')) as student_name,
+        c.id as class_id,
+        COALESCE(c.class_code, c.section_name, 'Unassigned') as class_name,
+        COALESCE(s.name, CASE WHEN s.semester_number IS NOT NULL THEN CONCAT('Sem ', s.semester_number) ELSE 'N/A' END) as semester_name,
+        s.semester_number,
         COUNT(a.id) as total_sessions, 
-        SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions
+        SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) as present_sessions,
+        ROUND((SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) * 100, 1) as attendance_percentage
       FROM attendance_records a
       JOIN class_sessions cs ON a.class_session_id = cs.id
       JOIN students st ON a.student_id = st.id
+      LEFT JOIN student_enrollments se ON st.id = se.student_id AND se.status = 'ACTIVE'
+      LEFT JOIN classes c ON se.class_id = c.id
+      LEFT JOIN semesters s ON c.semester_id = s.id
       WHERE cs.status = 'CONDUCTED'
-      GROUP BY st.id, st.student_id, st.first_name, st.last_name
-      HAVING (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
+      GROUP BY st.id, st.admission_number, st.student_id, st.first_name, st.last_name, c.id, c.class_code, c.section_name, s.name, s.semester_number
+      HAVING total_sessions > 0 AND (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) < 0.75
       ORDER BY (SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) / COUNT(a.id)) ASC
-      LIMIT 15
+      LIMIT 25
     `),
     pool.query(`
       SELECT c.class_code, c.section_name, s.name as semester_name, b.batch_name, b.department_id

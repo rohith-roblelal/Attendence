@@ -214,35 +214,54 @@ export default function AdministrationPage() {
                 {atRiskStudents.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">No students are currently at risk.</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Admission No</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Total Sessions</TableHead>
-                        <TableHead>Present</TableHead>
-                        <TableHead>Attendance %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {atRiskStudents.map((student: any) => {
-                        const sTotal = Number(student.total_sessions) || 0;
-                        const sPresent = Number(student.present_sessions) || 0;
-                        const sPerc = sTotal > 0 ? Math.round((sPresent / sTotal) * 100) : 0;
-                        return (
-                          <TableRow key={student.admission_number}>
-                            <TableCell className="font-medium">{student.admission_number}</TableCell>
-                            <TableCell>{student.student_name}</TableCell>
-                            <TableCell>{sTotal}</TableCell>
-                            <TableCell>{sPresent}</TableCell>
-                            <TableCell>
-                              <Badge variant="destructive">{sPerc}%</Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap">Admission No.</TableHead>
+                          <TableHead>Student Name</TableHead>
+                          <TableHead>Class</TableHead>
+                          <TableHead>Semester</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Total Eligible Attendance Sessions</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Sessions Attended</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">Attendance %</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {atRiskStudents.map((student: any) => {
+                          const sTotal = Number(student.total_sessions) || 0;
+                          const sPresent = Number(student.present_sessions) || 0;
+                          const sPerc = student.attendance_percentage !== undefined && student.attendance_percentage !== null
+                            ? Number(student.attendance_percentage)
+                            : (sTotal > 0 ? Math.round((sPresent / sTotal) * 1000) / 10 : 0);
+                          const semDisplay = student.semester_name 
+                            ? (student.semester_name.startsWith('Sem') ? student.semester_name : `Sem ${student.semester_name}`)
+                            : (student.semester_number ? `Sem ${student.semester_number}` : 'N/A');
+                          const classDisplay = student.class_name || (student.class_code || student.section_name || 'Unassigned');
+                          
+                          return (
+                            <TableRow key={student.admission_number || student.student_name}>
+                              <TableCell className="font-medium whitespace-nowrap">{student.admission_number || '-'}</TableCell>
+                              <TableCell className="font-medium">{student.student_name}</TableCell>
+                              <TableCell className="whitespace-nowrap">{classDisplay}</TableCell>
+                              <TableCell className="whitespace-nowrap">{semDisplay}</TableCell>
+                              <TableCell className="text-right font-medium">{sTotal}</TableCell>
+                              <TableCell className="text-right font-medium">{sPresent}</TableCell>
+                              <TableCell className="text-right font-semibold text-destructive whitespace-nowrap">
+                                {sPerc}%
+                              </TableCell>
+                              <TableCell className="text-center whitespace-nowrap">
+                                <Badge variant="destructive" className="font-semibold">
+                                  At Risk
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

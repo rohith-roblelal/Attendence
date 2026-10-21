@@ -35,10 +35,41 @@ describe('Dashboard Module', () => {
     studentToken = 'student-token';
   });
 
-  it('GET /administration returns stats', async () => {
-    vi.spyOn(repo, 'getAdministrationStats').mockResolvedValue({ counts: {}, attendanceOverview: {} });
+  it('GET /administration returns stats and at-risk students list', async () => {
+    const mockAtRiskStudents = [
+      {
+        admission_number: 'ADM102',
+        student_name: 'Student Example',
+        class_id: 1,
+        class_name: 'BCA',
+        semester_name: 'Sem 3',
+        semester_number: 3,
+        total_sessions: 25,
+        present_sessions: 17,
+        attendance_percentage: 68
+      }
+    ];
+
+    vi.spyOn(repo, 'getAdministrationStats').mockResolvedValue({
+      kpis: {
+        students_at_risk: 1,
+        classes_missing_attendance_today: 0
+      },
+      lists: {
+        at_risk_students: mockAtRiskStudents,
+        missed_classes: []
+      }
+    } as any);
+
     const res = await request(app).get('/api/v1/dashboard/administration').set('Cookie', [`token=${adminToken}`]);
     expect(res.status).toBe(200);
+    expect(res.body.data.lists.at_risk_students).toHaveLength(1);
+    expect(res.body.data.lists.at_risk_students[0].admission_number).toBe('ADM102');
+    expect(res.body.data.lists.at_risk_students[0].class_name).toBe('BCA');
+    expect(res.body.data.lists.at_risk_students[0].semester_name).toBe('Sem 3');
+    expect(res.body.data.lists.at_risk_students[0].total_sessions).toBe(25);
+    expect(res.body.data.lists.at_risk_students[0].present_sessions).toBe(17);
+    expect(res.body.data.lists.at_risk_students[0].attendance_percentage).toBe(68);
   });
 
   it('GET /hod returns stats for assigned HOD', async () => {

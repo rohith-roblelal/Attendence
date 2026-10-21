@@ -11,8 +11,8 @@ router.use(authenticate);
 router.get('/', ctrl.getAll);
 router.get('/:id', validateRequest(schemas.idParamSchema), ctrl.getById);
 
-router.post('/', authorize('ADMINISTRATION'), validateRequest(schemas.createSubjectSchema), ctrl.create);
-router.patch('/:id', authorize('ADMINISTRATION'), validateRequest(schemas.idParamSchema), validateRequest(schemas.updateSubjectSchema), ctrl.update);
-router.delete('/:id', authorize('ADMINISTRATION'), validateRequest(schemas.idParamSchema), ctrl.remove);
+router.post('/', authorize('HOD'), validateRequest(schemas.createSubjectSchema), ctrl.create);
+router.patch('/:id', authorize('HOD'), validateRequest(schemas.idParamSchema), validateRequest(schemas.updateSubjectSchema), ctrl.update);
+router.delete('/:id', authorize('HOD'), validateRequest(schemas.idParamSchema), ctrl.remove);
 
 export default router;

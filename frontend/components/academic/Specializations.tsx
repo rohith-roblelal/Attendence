@@ -101,6 +101,17 @@ const fetchData = async () => {
     setError(null);
   };
 
+  const deleteSpec = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this specialization?')) return;
+    setError(null);
+    try {
+      await academicApi.deleteSpecialization(id);
+      fetchData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete specialization');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
@@ -191,6 +202,7 @@ const fetchData = async () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="link" onClick={() => editSpec(spec)}>Edit</Button>
+                      <Button variant="link" className="text-destructive" onClick={() => deleteSpec(spec.id)}>Delete</Button>
                     </TableCell>
                   </TableRow>
                 );

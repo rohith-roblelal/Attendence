@@ -91,6 +91,17 @@ const fetchDepartments = async () => {
     setError(null);
   };
 
+  const deleteDept = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this department?')) return;
+    setError(null);
+    try {
+      await academicApi.deleteDepartment(id);
+      fetchDepartments();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete department');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
@@ -177,6 +188,7 @@ const fetchDepartments = async () => {
                       </DialogContent>
                     </Dialog>
                     <Button variant="link" onClick={() => editDept(dept)}>Edit</Button>
+                    <Button variant="link" className="text-destructive" onClick={() => deleteDept(dept.id)}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))

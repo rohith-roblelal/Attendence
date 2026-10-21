@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { subjectsApi } from '../../lib/api/subjects';
+import { useAuth } from '../../lib/auth/AuthContext';
 import { Edit2, Trash2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,9 @@ const createSubjectSchema = z.object({
 });
 
 export default function Subjects() {
+  const { user } = useAuth();
+  const isHod = user?.role === 'HOD';
+
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +43,7 @@ export default function Subjects() {
     defaultValues: { is_active: true, subject_type: 'THEORY' }
   });
 
-const fetchSubjects = async () => {
+  const fetchSubjects = async () => {
     setLoading(true);
     try {
       const res = await subjectsApi.getSubjects();
@@ -58,6 +62,7 @@ const fetchSubjects = async () => {
 
   
   const onSubmit = async (data: any) => {
+    if (!isHod) return;
     setError(null);
     try {
       const payload = { ...data };
@@ -80,6 +85,7 @@ const fetchSubjects = async () => {
   };
 
   const editSubject = (sub: any) => {
+    if (!isHod) return;
     setIsEditing(true);
     setCurrentId(sub.id);
     reset({
@@ -101,7 +107,7 @@ const fetchSubjects = async () => {
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
+    if (!isHod || !deleteId) return;
     setError(null);
     try {
       await subjectsApi.deleteSubject(deleteId);
@@ -117,70 +123,72 @@ const fetchSubjects = async () => {
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? 'Edit Subject' : 'Create Subject'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Subject Code</Label>
-                <Input {...register('code')} placeholder="e.g. CS101" />
-                {errors.code && <p className="text-destructive text-xs mt-1">{errors.code.message as string}</p>}
+      {isHod && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{isEditing ? 'Edit Subject' : 'Create Subject'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Subject Code</Label>
+                  <Input {...register('code')} placeholder="e.g. CS101" />
+                  {errors.code && <p className="text-destructive text-xs mt-1">{errors.code.message as string}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Subject Name</Label>
+                  <Input {...register('name')} placeholder="e.g. Introduction to Programming" />
+                  {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message as string}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <select {...register('subject_type')} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+                    <option value="THEORY">Theory</option>
+                    <option value="PRACTICAL">Practical</option>
+                    <option value="PROJECT">Project</option>
+                    <option value="SEMINAR">Seminar</option>
+                  </select>
+                  {errors.subject_type && <p className="text-destructive text-xs mt-1">{errors.subject_type.message as string}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Credits</Label>
+                  <Input type="number" step="0.5" {...register('credits', { valueAsNumber: true })} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Contact Hours</Label>
+                  <Input type="number" {...register('default_contact_hours', { valueAsNumber: true })} />
+                </div>
+
+                <div className="md:col-span-2 lg:col-span-3 space-y-2">
+                  <Label>Description</Label>
+                  <textarea {...register('description')} className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" rows={2} />
+                </div>
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <input type="checkbox" id="sub_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
+                  <Label htmlFor="sub_is_active">Active</Label>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Subject Name</Label>
-                <Input {...register('name')} placeholder="e.g. Introduction to Programming" />
-                {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message as string}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <select {...register('subject_type')} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="THEORY">Theory</option>
-                  <option value="PRACTICAL">Practical</option>
-                  <option value="PROJECT">Project</option>
-                  <option value="SEMINAR">Seminar</option>
-                </select>
-                {errors.subject_type && <p className="text-destructive text-xs mt-1">{errors.subject_type.message as string}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Credits</Label>
-                <Input type="number" step="0.5" {...register('credits', { valueAsNumber: true })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Contact Hours</Label>
-                <Input type="number" {...register('default_contact_hours', { valueAsNumber: true })} />
-              </div>
-
-              <div className="md:col-span-2 lg:col-span-3 space-y-2">
-                <Label>Description</Label>
-                <textarea {...register('description')} className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" rows={2} />
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2">
-                <input type="checkbox" id="sub_is_active" {...register('is_active')} className="h-4 w-4 text-primary focus:ring-primary border-input rounded" />
-                <Label htmlFor="sub_is_active">Active</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Subject' : 'Create Subject')}
-              </Button>
-              {isEditing && (
-                <Button type="button" variant="outline" onClick={cancelEdit}>
-                  Cancel
+              <div className="flex gap-2 pt-2">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (isEditing ? 'Update Subject' : 'Create Subject')}
                 </Button>
-              )}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                {isEditing && (
+                  <Button type="button" variant="outline" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="border rounded-md overflow-x-auto">
         <Table>
@@ -191,14 +199,14 @@ const fetchSubjects = async () => {
               <TableHead>Type</TableHead>
               <TableHead>Credits / Hrs</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {isHod && <TableHead className="text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isHod ? 6 : 5} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : subjects.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No subjects found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={isHod ? 6 : 5} className="text-center text-muted-foreground">No subjects found.</TableCell></TableRow>
             ) : (
               subjects.map(sub => (
                 <TableRow key={sub.id}>
@@ -213,16 +221,18 @@ const fetchSubjects = async () => {
                       {sub.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-3">
-                      <button onClick={() => editSubject(sub)} className="text-primary hover:text-primary">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setDeleteId(sub.id)} className="text-destructive hover:text-red-900">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </TableCell>
+                  {isHod && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-3">
+                        <button onClick={() => editSubject(sub)} className="text-primary hover:text-primary">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setDeleteId(sub.id)} className="text-destructive hover:text-red-900">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

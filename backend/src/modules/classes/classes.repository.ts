@@ -77,5 +77,5 @@ export const updateClass = async (id: number, data: any) => {
 };
 
 export const deleteClass = async (id: number) => {
-  await pool.query('UPDATE classes SET is_active = FALSE, updated_at = NOW() WHERE id = ?', [id]);
+  await pool.query('DELETE FROM classes WHERE id = ?', [id]);
 };

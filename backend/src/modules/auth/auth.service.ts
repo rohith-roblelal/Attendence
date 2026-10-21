@@ -8,7 +8,17 @@ export const login = async (username: string, passwordPlain: string) => {
     throw { status: 401, message: 'Invalid credentials' };
   }
 
-  const isValid = await argon2.verify(user.password_hash, passwordPlain);
+  if (!user.password_hash || typeof user.password_hash !== 'string' || !user.password_hash.startsWith('$')) {
+    throw { status: 401, message: 'Invalid credentials' };
+  }
+
+  let isValid = false;
+  try {
+    isValid = await argon2.verify(user.password_hash, passwordPlain);
+  } catch (err) {
+    throw { status: 401, message: 'Invalid credentials' };
+  }
+
   if (!isValid) {
     throw { status: 401, message: 'Invalid credentials' };
   }

@@ -77,7 +77,7 @@ export const updateDepartment = async (id: number, data: any) => {
   await pool.query(`UPDATE departments SET ${updates.join(', ')} WHERE id = ?`, values);
 };
 export const deleteDepartment = async (id: number) => {
-  await pool.query('UPDATE departments SET is_active = FALSE, updated_at = NOW() WHERE id = ?', [id]);
+  await pool.query('DELETE FROM departments WHERE id = ?', [id]);
 };
 
 // --- Specializations ---
@@ -114,7 +114,7 @@ export const updateSpecialization = async (id: number, data: any) => {
   await pool.query(`UPDATE specializations SET ${updates.join(', ')} WHERE id = ?`, values);
 };
 export const deleteSpecialization = async (id: number) => {
-  await pool.query('UPDATE specializations SET is_active = FALSE, updated_at = NOW() WHERE id = ?', [id]);
+  await pool.query('DELETE FROM specializations WHERE id = ?', [id]);
 };
 
 // --- Admission Batches ---
