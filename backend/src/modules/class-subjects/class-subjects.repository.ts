@@ -71,7 +71,7 @@ export const createAssignment = async (data: any) => {
 export const updateAssignment = async (id: number, data: any) => {
   const updates: string[] = [];
   const values: any[] = [];
-  ['end_date', 'is_active'].forEach(key => {
+  ['teacher_id', 'end_date', 'is_active'].forEach(key => {
     if (data[key] !== undefined) {
       updates.push(`${key} = ?`);
       values.push(data[key]);

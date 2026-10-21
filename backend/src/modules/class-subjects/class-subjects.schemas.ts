@@ -17,6 +17,7 @@ export const createClassSubjectSchema = z.object({
 
 export const updateClassSubjectSchema = z.object({
   body: z.object({
+    teacher_id: z.number().int().positive().optional(),
     end_date: z.string().date().nullable().optional(),
     is_active: z.boolean().optional(),
   })
