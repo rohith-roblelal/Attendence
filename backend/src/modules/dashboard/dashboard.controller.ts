@@ -19,8 +19,8 @@ export const getHodStats = async (req: Request, res: Response, next: NextFunctio
       return res.status(403).json({ status: 'error', message: 'Not a teacher' });
     }
 
-    // Resolve Active HOD Assignment -> Assigned Department -> Assigned Academic Year
-    // Checks is_active AND strict date lifecycle boundaries (start_date <= today <= end_date)
+    // Resolve Active HOD Assignment -> Assigned Department
+    // Department-level HOD assignment governs the department across all academic years
     const [hodRows] = await pool.query(
       'SELECT department_id, academic_year_id FROM department_hod_assignments WHERE teacher_id = ? AND is_active = TRUE AND start_date <= CURDATE() AND (end_date IS NULL OR end_date >= CURDATE()) LIMIT 1',
       [teacherId]
@@ -32,8 +32,14 @@ export const getHodStats = async (req: Request, res: Response, next: NextFunctio
     }
 
     const { department_id: departmentId, academic_year_id: assignedAcademicYearId } = assignment;
-    const academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
     
+    // Resolve academic year: query parameter takes precedence, then assigned academic year, then latest active academic year
+    let academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+    if (!academicYearId) {
+      const [latestYearRows] = await pool.query('SELECT id FROM academic_years ORDER BY is_active DESC, id DESC LIMIT 1');
+      academicYearId = (latestYearRows as any[])[0]?.id;
+    }
+
     // Fetch dashboard stats scoped by securely resolved department and selected academic year
     const stats = await repo.getHodStats(departmentId, academicYearId);
     res.json({ status: 'success', data: stats });
@@ -55,7 +61,11 @@ export const getHodPeople = async (req: Request, res: Response, next: NextFuncti
     if (!assignment) return res.status(403).json({ status: 'error', message: 'No active HOD assignment found' });
 
     const { department_id: departmentId, academic_year_id: assignedAcademicYearId } = assignment;
-    const academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+    let academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+    if (!academicYearId) {
+      const [latestYearRows] = await pool.query('SELECT id FROM academic_years ORDER BY is_active DESC, id DESC LIMIT 1');
+      academicYearId = (latestYearRows as any[])[0]?.id;
+    }
 
     const data = await repo.getHodTeachersByClass(departmentId, academicYearId);
     const [allAcademicYears] = await pool.query('SELECT id, name FROM academic_years ORDER BY id DESC');

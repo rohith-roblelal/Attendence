@@ -8,9 +8,9 @@ export const idParamSchema = z.object({
 
 export const createHodAssignmentSchema = z.object({
   body: z.object({
-    department_id: z.number().int().positive(),
-    teacher_id: z.number().int().positive(),
-    academic_year_id: z.number().int().positive(),
+    department_id: z.number().int().positive('Department is required'),
+    teacher_id: z.number().int().positive('Teacher is required'),
+    academic_year_id: z.number().int().positive().optional().nullable(),
     start_date: z.string().date().optional(), // defaults to CURDATE() in logic
   })
 });

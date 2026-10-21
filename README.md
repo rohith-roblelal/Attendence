@@ -208,11 +208,12 @@ Build a complete digital attendance ecosystem that is:
 
 **Secure → Fast → Scalable → Maintainable → Mobile Ready**
 
-## 👨‍💻 Project
+## 👥 Project Team Members
 
-**Student Attendance Management System**
-
-Developed as a full-stack educational technology project.
+1. **ROHITH ROBLELAL**
+2. **MOHAMMAD SALIH**
+3. **VISHNU K**
+4. **VAISAGH C J**
 
 ## 📜 License
 

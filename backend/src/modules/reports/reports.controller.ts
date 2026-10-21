@@ -66,7 +66,11 @@ export const getHodReport = async (req: Request, res: Response, next: NextFuncti
     if (!assignment) return res.status(403).json({ status: 'error', message: 'No active HOD assignment found' });
 
     const { department_id: departmentId, academic_year_id: assignedAcademicYearId } = assignment;
-    const academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+    let academicYearId = req.query.academic_year_id ? parseInt(req.query.academic_year_id as string, 10) : assignedAcademicYearId;
+    if (!academicYearId) {
+      const [latestYearRows] = await pool.query('SELECT id FROM academic_years ORDER BY is_active DESC, id DESC LIMIT 1');
+      academicYearId = (latestYearRows as any[])[0]?.id;
+    }
 
     const [allAcademicYears] = await pool.query('SELECT id, name FROM academic_years ORDER BY id DESC');
     const report = await repo.getHodDepartmentReport(departmentId, academicYearId);

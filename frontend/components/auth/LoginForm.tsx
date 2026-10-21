@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { apiClient } from '../../lib/api/client';
 import { useRouter } from 'next/navigation';
@@ -17,11 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Field,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 
 const loginSchema = z.object({
@@ -38,6 +35,7 @@ export function LoginForm({
   const { login } = useAuth();
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   
   const {
     register,
@@ -79,45 +77,57 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  autoComplete="username"
-                  disabled={isSubmitting}
-                  {...register('username')}
-                />
-                {errors.username && <p className="text-destructive text-xs mt-1">{errors.username.message}</p>}
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                autoComplete="username"
+                disabled={isSubmitting}
+                {...register('username')}
+              />
+              {errors.username && <p className="text-destructive text-xs mt-1">{errors.username.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
                 <Input 
                   id="password" 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   disabled={isSubmitting}
+                  className="pr-10"
                   {...register('password')} 
                 />
-                {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
-              </Field>
-              
-              {serverError && (
-                <div className="text-destructive text-sm text-center font-medium py-2">
-                  {serverError}
-                </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message}</p>}
+            </div>
+            
+            {serverError && (
+              <div className="text-destructive text-sm text-center font-medium py-2">
+                {serverError}
+              </div>
+            )}
 
-              <Field>
-                <Button type="submit" disabled={isSubmitting} className="w-full">
-                  {isSubmitting ? 'Authenticating...' : 'Sign In'}
-                </Button>
-              </Field>
-            </FieldGroup>
+            <Button type="submit" disabled={isSubmitting} className="w-full mt-2">
+              {isSubmitting ? 'Authenticating...' : 'Sign In'}
+            </Button>
           </form>
         </CardContent>
       </Card>

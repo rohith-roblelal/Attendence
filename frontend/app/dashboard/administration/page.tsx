@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "../../../lib/api/client";
 import Link from "next/link";
 import { AlertCircle, CalendarX2 } from 'lucide-react';
+import { formatKey as baseFormatKey } from '../../../lib/utils/formatters';
 
 const AT_RISK_THRESHOLD = 75;
 
@@ -46,8 +47,7 @@ const TONE_TEXT = {
   warning: 'text-amber-600 dark:text-amber-400',
 };
 
-const formatKey = (key: string) =>
-  LABELS[key] ?? key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+const formatKey = (key: string) => LABELS[key] ?? baseFormatKey(key);
 
 export default function AdministrationPage() {
   const [data, setData] = useState<any>(null);

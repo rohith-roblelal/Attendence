@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { usersApi } from '../../lib/api/users';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ export default function Users() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,7 +132,26 @@ export default function Users() {
               {!isEditing && (
                 <div className="space-y-2">
                   <Label>Password</Label>
-                  <Input type="password" {...register('password')} placeholder="Min 6 characters" />
+                  <div className="relative">
+                    <Input 
+                      type={showPassword ? "text" : "password"} 
+                      {...register('password')} 
+                      placeholder="Min 6 characters" 
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                   {errors.password && <p className="text-destructive text-xs mt-1">{errors.password.message as string}</p>}
                 </div>
               )}

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeftRight, Check, X, Calendar, AlertCircle, BookOpen, Users } from 'lucide-react';
 import { apiClient } from "../../../lib/api/client";
 import { swapsApi } from "../../../lib/api/swaps";
+import { formatKey } from '../../../lib/utils/formatters';
 
 import ProtectedRoute from '../../../components/ProtectedRoute';
 
@@ -50,13 +51,6 @@ export default function TeacherPage() {
         text: err.response?.data?.message || 'Failed to update swap request.'
       });
     }
-  };
-
-  const formatKey = (key: string) => {
-    return key
-      .replace(/_/g, ' ')
-      .replace(/([A-Z])/g, ' $1')
-      .trim();
   };
 
   if (loading) {

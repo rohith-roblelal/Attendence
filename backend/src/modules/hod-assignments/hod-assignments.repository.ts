@@ -48,7 +48,7 @@ export const createAssignment = async (data: any) => {
     const [res] = await connection.query(
       `INSERT INTO department_hod_assignments (department_id, teacher_id, academic_year_id, start_date, is_active, created_at) 
        VALUES (?, ?, ?, COALESCE(?, CURDATE()), TRUE, NOW())`,
-      [data.department_id, data.teacher_id, data.academic_year_id, data.start_date || null]
+      [data.department_id, data.teacher_id, data.academic_year_id || null, data.start_date || null]
     );
 
     await connection.commit();

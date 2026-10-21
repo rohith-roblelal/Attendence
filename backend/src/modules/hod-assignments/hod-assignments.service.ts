@@ -2,6 +2,7 @@ import * as repo from './hod-assignments.repository';
 
 const handleError = (error: any) => {
   if (error.code === 'ER_NO_REFERENCED_ROW_2') throw { status: 404, message: 'Referenced department, teacher, or academic year not found' };
+  if (error.code === 'ER_DUP_ENTRY') throw { status: 409, message: 'This department already has an active HOD assigned.' };
   throw error;
 };
 

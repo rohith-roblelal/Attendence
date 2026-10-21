@@ -129,9 +129,16 @@
 - ✅ **Production Hardening (Phase 5):** Hardened rate limiters, corrected backend environment loading, removed vulnerable JWT configurations, and audited dependencies.
 - ✅ **Migration Planning (Phase 6):** Formulated deterministic runbook for migrating the local XAMPP MySQL database safely to Aiven Cloud MySQL without affecting development environments.
 
+### Phase 25: RBAC Role Restriction, Dashboard Analytics & Permanent Academic Deletion
+- ✅ **HOD Role Exclusivity (Subjects & Timetable):** Restricted all write operations (Create, Update, Delete) on Subjects (`/api/v1/subjects`) and Timetables (`/api/v1/timetable`) strictly to the `HOD` role via backend middleware authorization. Non-HOD users (including `ADMINISTRATION`) retain read-only visibility. Fixed Express route collision on `/daily-changes`.
+- ✅ **HOD Frontend Workspaces & Navigation:** Registered dedicated `/dashboard/hod/subjects` and `/dashboard/hod/timetable` routes in the dashboard sidebar, concealing mutation forms and action triggers for non-HOD users.
+- ✅ **Admin Dashboard At-Risk Student Analytics:** Replaced placeholder metrics with a live, comprehensive data table in the Administration Dashboard "Students with < 75% Attendance" card. Displays Admission No., Student Name, Class, Semester, Total Sessions, Sessions Attended, Attendance %, and Destructive Risk Status badge.
+- ✅ **Permanent Academic Deletions:** Replaced soft deactivation (`is_active = FALSE`) with true physical database deletions (`DELETE FROM ... WHERE id = ?`) for Classes (`classes.repository.ts`), Departments, and Specializations (`academic.repository.ts`). Added frontend confirmation dialogs and delete actions. Enforced relational integrity via MySQL foreign key restriction error handling (HTTP 409).
+- ✅ **Argon2 Password Hash Guarding:** Resolved Argon2 verification crashes (`pchstr must contain a $ as first char`) by implementing prefix validation and graceful `try...catch` handling in `auth.service.ts` that safely returns `HTTP 401 Unauthorized`. Restored a valid Argon2id hash for the administrative account in MySQL.
+
 ## Current State
-**Status:** Ready for Deployment Planning 🚀
-**Last Updated:** 2026-10-04
+**Status:** Feature Complete & Production Hardened 🚀
+**Last Updated:** 2026-10-21
 **Pending Action Items:**
 - Implement "Applied Science" as a full department with associated specializations if needed.
 - ✅ Investigate and fix "Invalid role: TUTOR / HOD" errors (This was completely resolved in Phase 22 when we added the missing roles to the Aiven database, and the frontend schemas fully support them).
@@ -146,3 +153,5 @@
 - ✅ **Quality Assurance & Testing:** Executed a comprehensive manual test matrix validating RBAC boundaries, Authentication edge cases, error state handling, and regression-tested all primary dashboards following the optimization phase. Documented in `doc/qa_testing_report.md`.
 - ✅ **UI/UX & Accessibility Polish:** Conducted a final visual and accessibility audit of the frontend. Verified semantic ARIA attributes, robust error/loading boundaries (`animate-pulse` skeletons), and fluid responsive grid scaling across all major dashboard devices. Documented in `doc/ui_ux_audit_report.md`.
 - ✅ **Final Release Readiness Audit:** Ran production Next.js and Typescript `tsc` builds, squashed deprecation warnings, verified API backward compatibility, and certified the repository as Production Ready. Documented in `doc/release_readiness_report.md`.
+- ✅ **Phase 25 Audit & Verification:** Validated 29/29 permission test cases, built backend and frontend bundles cleanly with 0 errors, and verified live database deletions and admin login. Documented in `doc/phase_25_rbac_dashboard_deletion_report.md` and `doc/rbac_dashboard_deletion_enhancements_report.md`.
+- ✅ **Phase 26: Department-Level HOD Assignment & Multi-Year Academic Selector:** Migrated `department_hod_assignments` to department-level scope with MySQL virtual generated column and `UNIQUE KEY uk_active_dept_hod`. Enforced exactly one active HOD per department. Implemented dynamic Academic Year selectors across HOD Dashboard (`/dashboard/hod`), Teachers & Classes (`/dashboard/hod/people`), and Department Reports (`/dashboard/hod/reports`). Verified strict cross-department isolation. Documented in `doc/phase_26_department_hod_academic_year_selector_report.md`.
