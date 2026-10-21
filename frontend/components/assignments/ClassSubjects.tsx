@@ -22,7 +22,7 @@ const updateClassSubjectSchema = z.object({
   is_active: z.boolean().optional(),
 });
 
-export default function ClassSubjects() {
+export default function ClassSubjects({ readOnly = false }: { readOnly?: boolean }) {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -119,8 +119,9 @@ const fetchData = async () => {
     <div className="space-y-6">
       {error && <div className="bg-red-50 text-destructive p-3 rounded">{error}</div>}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-card text-card-foreground p-4 rounded shadow-sm border border-border space-y-4">
-        <h3 className="font-semibold text-lg">{isEditing ? 'Edit Assignment Status/End Date' : 'Assign Subject to Class'}</h3>
+      {!readOnly && (
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-card text-card-foreground p-4 rounded shadow-sm border border-border space-y-4">
+          <h3 className="font-semibold text-lg">{isEditing ? 'Edit Assignment Status/End Date' : 'Assign Subject to Class'}</h3>
         
         {!isEditing ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -188,6 +189,7 @@ const fetchData = async () => {
           )}
         </div>
       </form>
+      )}
 
       <div className="bg-card text-card-foreground rounded shadow-sm border border-border overflow-hidden">
         <table className="min-w-full divide-y divide-border">
@@ -195,17 +197,17 @@ const fetchData = async () => {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Class</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Subject</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Teacher</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Assigned Teacher</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Dates</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+              {!readOnly && <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>}
             </tr>
           </thead>
           <tbody className="bg-card text-card-foreground divide-y divide-border">
             {loading ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">Loading...</td></tr>
+              <tr><td colSpan={readOnly ? 5 : 6} className="px-6 py-4 text-center text-sm text-muted-foreground">Loading...</td></tr>
             ) : assignments.length === 0 ? (
-              <tr><td colSpan={6} className="px-6 py-4 text-center text-sm text-muted-foreground">No class-subject assignments found.</td></tr>
+              <tr><td colSpan={readOnly ? 5 : 6} className="px-6 py-4 text-center text-sm text-muted-foreground">No class-subject assignments found.</td></tr>
             ) : (
               assignments.map(assn => {
                 const cls = classes.find(c => c.id === assn.class_id);
@@ -214,8 +216,8 @@ const fetchData = async () => {
                 return (
                   <tr key={assn.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{cls?.class_code || cls?.section_name || assn.class_id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{sub?.code || assn.subject_id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{teacher ? `${teacher.first_name} ${teacher.last_name}` : assn.teacher_id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{sub?.code || assn.subject_id} - {sub?.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground font-medium">{teacher ? `${teacher.first_name} ${teacher.last_name || ''}` : `Teacher ID: ${assn.teacher_id}`}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       <div className="flex flex-col text-xs">
                         <span>Start: {assn.start_date?.split('T')[0] || '-'}</span>
@@ -227,22 +229,24 @@ const fetchData = async () => {
                         {assn.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end gap-3">
-                        <button onClick={() => editAssignment(assn)} className="text-primary hover:text-primary">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        {assn.is_active ? (
-                          <button onClick={() => setDeactivateId(assn.id)} className="text-destructive hover:text-red-900">
-                            <UserX className="w-4 h-4" />
+                    {!readOnly && (
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-3">
+                          <button onClick={() => editAssignment(assn)} className="text-primary hover:text-primary">
+                            <Edit2 className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <button disabled className="text-gray-300 cursor-not-allowed">
-                            <UserX className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                          {assn.is_active ? (
+                            <button onClick={() => setDeactivateId(assn.id)} className="text-destructive hover:text-red-900">
+                              <UserX className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button disabled className="text-gray-300 cursor-not-allowed">
+                              <UserX className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })
