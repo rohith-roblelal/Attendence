@@ -1,0 +1,29 @@
+# ==============================================================================
+# Apache Web Server Configuration (.htaccess)
+# College Attendance Management System - LAMP Stack Edition
+# ==============================================================================
+
+# 1. Disable Directory Index Browsing for security
+Options -Indexes
+
+# 2. Prevent direct HTTP access to configuration, include, and SQL database files
+<FilesMatch "(database\.php|\.sql|\.example\.php)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 3. Default Document Index
+DirectoryIndex index.php
+
+# 4. Set Character Encoding
+AddDefaultCharset UTF-8
+
+# 5. Enable gzip compression if mod_deflate is active
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
