@@ -1,0 +1,21 @@
+CREATE TABLE class_sessions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    class_id BIGINT UNSIGNED NOT NULL,
+    class_subject_id BIGINT UNSIGNED NOT NULL,
+    session_date DATE NOT NULL,
+    period_number TINYINT NOT NULL,
+    assigned_teacher_id BIGINT UNSIGNED NOT NULL,
+    conducted_by_teacher_id BIGINT UNSIGNED NOT NULL,
+    contact_hours DECIMAL(5,2) DEFAULT 1,
+    status VARCHAR(30) NOT NULL,
+    source VARCHAR(30) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE RESTRICT,
+    FOREIGN KEY (class_subject_id) REFERENCES class_subjects(id) ON DELETE RESTRICT,
+    FOREIGN KEY (assigned_teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT,
+    FOREIGN KEY (conducted_by_teacher_id) REFERENCES teachers(id) ON DELETE RESTRICT,
+    INDEX idx_sessions_class_date (class_id, session_date),
+    INDEX idx_sessions_subject_date (class_subject_id, session_date),
+    INDEX idx_sessions_teacher_date (conducted_by_teacher_id, session_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

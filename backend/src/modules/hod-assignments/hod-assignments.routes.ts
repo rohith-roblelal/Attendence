@@ -1,0 +1,20 @@
+import { Router } from 'express';
+import * as ctrl from './hod-assignments.controller';
+import { validateRequest } from '../../middleware/validateRequest';
+import * as schemas from './hod-assignments.schemas';
+import { authenticate } from '../../middleware/authenticate';
+import { authorize } from '../../middleware/authorize';
+
+const router = Router();
+router.use(authenticate);
+
+// Read routes
+router.get('/', ctrl.getAll);
+router.get('/:id', validateRequest(schemas.idParamSchema), ctrl.getById);
+
+// Write routes
+router.post('/', authorize('ADMINISTRATION'), validateRequest(schemas.createHodAssignmentSchema), ctrl.create);
+router.patch('/:id', authorize('ADMINISTRATION'), validateRequest(schemas.idParamSchema), validateRequest(schemas.updateHodAssignmentSchema), ctrl.update);
+router.delete('/:id', authorize('ADMINISTRATION'), validateRequest(schemas.idParamSchema), ctrl.deactivate);
+
+export default router;

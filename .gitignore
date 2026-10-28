@@ -1,0 +1,42 @@
+# Node modules
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+**/dist/
+**/build/
+**/.next/
+
+# Environment files — NEVER commit secrets
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env.local
+frontend/.env.production
+**/.env.local
+**/.env.production
+
+# Development-only scripts (not for production)
+backend/seed_admin.js
+backend/get_users.js
+backend/check_roles.js
+backend/fix.js
+backend/fix2.js
+backend/patch.js
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
