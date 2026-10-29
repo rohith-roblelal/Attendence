@@ -1,9 +1,0 @@
-CREATE TABLE departments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(20) UNIQUE NOT NULL,
-    name VARCHAR(150) UNIQUE NOT NULL,
-    description TEXT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

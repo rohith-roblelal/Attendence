@@ -1,39 +1,31 @@
-# Phase 6 — Production Architecture & Migration Planning
+# Phase 6 — Production Architecture & Migration Planning (LAMP Edition)
 
 ## 1. Executive Summary
-This document outlines the recommended production architecture for the College Attendance System and provides a deterministic runbook for migrating from the local XAMPP environment to a live, scalable production environment. 
+This document outlines the production architecture for the College Attendance System deployed on the **LAMP Stack (Linux, Apache, MySQL, PHP)**.
 
 The primary goals of this architecture are:
-* **Zero or low cost** (optimized for a student/academic project scale).
-* **Low operational complexity** (managed services rather than raw VPS).
-* **High maintainability** (automated deployments via GitHub).
-* **Strict isolation** (local XAMPP development remains untouched and fully functional).
+* **Zero internet dependency**: Runs autonomously on private institution LAN networks without CDN or external cloud dependencies.
+* **Low resource overhead**: Lightweight PHP 8.x PDO execution on standard Apache HTTP server.
+* **Deterministic security**: Session-based RBAC, strict SQL prepared statements, and role-enforced page boundaries.
+* **Straightforward operations**: Standard XAMPP or native Ubuntu/Debian `apt install apache2 php mysql-server` deployment.
 
 ---
 
-## 2. Recommended Production Architecture
+## 2. Production Architecture
 
-After evaluating the application stack (Next.js 16, Node.js/Express, MySQL), budget constraints, and operational overhead, we recommend the following **Managed Platform-as-a-Service (PaaS)** architecture:
+### A. Web Server: Apache HTTP Server (`apache2`)
+* Modules required: `mod_rewrite`, `mod_headers`, `mod_authz_core`.
+* Document root configured to serve `lamp-version/` directly or as `/attendance`.
+* Protected directories (`config/`, `includes/`) blocked via `.htaccess` or Apache config.
 
-### A. Frontend: Vercel (Hobby/Free Tier)
-* **Why**: Next.js is built by Vercel. It provides zero-config deployments, edge caching, automated HTTPS, and CI/CD out of the box.
-* **Cost**: Free.
-* **Environment**: `NEXT_PUBLIC_API_URL` will point to the Render backend URL.
+### B. Application Runtime: PHP 8.1+
+* Extensions: `php-pdo`, `php-mysql`, `php-mbstring`, `php-json`.
+* Secure session settings: `session.cookie_httponly = 1`, `session.cookie_samesite = "Strict"`.
 
-### B. Backend: Render (Free/Starter Web Service)
-* **Why**: Render natively supports Node.js/Express. It handles automated builds, provides built-in HTTPS, and integrates easily with GitHub. It is significantly easier to maintain than a bare VPS (e.g., EC2 or DigitalOcean Droplet).
-* **Cost**: Free (spins down on inactivity) or ~$7/mo for a persistent 24/7 service.
-* **Environment**: Configured via Render Dashboard (`PORT`, `JWT_SECRET`, `FRONTEND_URL`, `DB_*`).
+### C. Database: MySQL 8.0 / MariaDB 10.x
+* Single database instance hosting the relational schema from `lamp-version/database/schema.sql`.
+* Seed data provided via `lamp-version/database/seed.sql` for out-of-the-box role testing.
 
-### C. Database: Aiven for MySQL (Free Plan)
-* **Why**: PlanetScale recently retired its free tier. Aiven offers a highly reliable, fully managed free MySQL instance. It handles backups, provides a public connection URI, and uses standard MySQL drivers fully compatible with the existing `mysql2` pool.
-* **Cost**: Free.
-* **Connection**: Accessed securely over TLS.
-
-### D. CORS & Domains
-* **Frontend Domain**: `https://college-attendance.vercel.app` (or custom domain).
-* **Backend Domain**: `https://college-attendance-api.onrender.com`.
-* **CORS**: The backend's `FRONTEND_URL` environment variable will be set to the Vercel domain, strictly locking down API access.
 
 ---
 

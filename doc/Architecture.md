@@ -2,61 +2,50 @@
 
 ## 1. Architecture Overview
 
-The application should use a layered architecture:
+The system is deployed on the **LAMP Stack (Linux, Apache, MySQL, PHP)** designed for multi-client Local Area Network (LAN) and Web deployments. It is implemented with high security, session-based RBAC, and zero client-side internet or framework dependencies.
 
 ```text
-┌───────────────────────────────┐
-│       Web Application         │
-└───────────────┬───────────────┘
-                │
-                ▼
-┌───────────────────────────────┐
-│          Backend API          │
-│                               │
-│ Authentication               │
-│ Authorization                │
-│ Business Logic               │
-│ Attendance                    │
-│ Timetable                    │
-│ Academic Management           │
-└───────────────┬───────────────┘
-                │
-                ▼
-┌───────────────────────────────┐
-│       MySQL / MariaDB         │
-└───────────────────────────────┘
++---------------------------------------------------------------------------------+
+|                               PRIVATE LOCAL AREA NETWORK (LAN) / WEB            |
+|                                     Subnet: 192.168.1.0/24                      |
++---------------------------------------------------------------------------------+
+                                         |
+         +-------------------------------+-------------------------------+
+         |                               |                               |
+         v                               v                               v
++------------------+           +-------------------+           +-------------------+
+|   LAMP SERVER    |           |    CLIENT 1 (PC)  |           | CLIENT 2 (MOBILE) |
+|  192.168.1.10    |           |   192.168.1.11    |           |   192.168.1.12    |
+|                  |           |                   |           |                   |
+| - Ubuntu / Apache| <======== | Browser: Chrome   |           | Browser: Safari   |
+| - PHP 8.x PDO    |  HTTP(S)  | User: Faculty     |           | User: Student     |
+| - MySQL 8.0 DB   |           | Action: Take      |           | Action: View      |
+| (lamp-version/)  |           | Attendance        |           | Attendance %      |
++------------------+           +-------------------+           +-------------------+
 ```
 
 ---
 
 # 2. Architectural Layers
 
-## Presentation Layer
+## Presentation Layer (Vanilla HTML5 / Modern CSS / JS)
 
-Contains:
-
-* Web UI
-* Forms
-* Dashboards
-* Attendance interfaces
-* Reports
-
-The presentation layer communicates with the backend through APIs.
+Located under `lamp-version/`:
+* **Admin Module (`admin/`)**: Academic setup, classes, subjects, faculty, students, attendance audits.
+* **Faculty Module (`faculty/`)**: My classes, session management, dynamic quick attendance marking, history.
+* **HOD Module (`hod/`)**: Department classes, subject allocations, student enrollment, reporting.
+* **Student Module (`student/`)**: Student personal dashboard, subject attendance analytics, detailed history.
+* **Design & Assets (`assets/`)**: Native CSS design system (`style.css`), dynamic UI interactions (`app.js`).
 
 ---
 
-# 3. API Layer
+# 3. Application & Controller Layer (PHP 8.x + PDO)
 
-The API layer handles:
+Located under `lamp-version/includes/` and `lamp-version/auth/`:
+* **Authentication & RBAC (`includes/auth.php`)**: Role-based access control, secure session management, horizontal privilege enforcement.
+* **Database Access (`includes/db.php`)**: Prepared statements singleton via PDO, SQL injection prevention.
+* **Security & Utility Helpers (`includes/functions.php`)**: XSS sanitation, URL resolution, attendance calculations.
 
-* Authentication
-* Authorization
-* Request validation
-* Response formatting
-* Rate limiting
-* API routing
-
-The frontend must not directly manipulate database records.
 
 ---
 
